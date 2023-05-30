@@ -1,47 +1,49 @@
 [workspace]
-members  = ["contracts/loyalty/*"]
+members = ["contracts/loyalty/*", "contracts/fair-burn"]
 resolver = "2"
 
 [workspace.package]
-version    = "1.0.0"
-edition    = "2021"
-homepage   = "https://stargaze.zone"
+version = "1.0.0"
+edition = "2021"
+homepage = "https://stargaze.zone"
 repository = "https://github.com/public-awesome/core"
-license    = "Apache-2.0"
+license = "Apache-2.0"
 
 [workspace.dependencies]
-cosmwasm-schema  = "1.2.1"
-cosmwasm-std     = "1.2.1"
+cosmwasm-schema = "1.2.1"
+cosmwasm-std = "1.2.1"
 cosmwasm-storage = "1.2.1"
 cw-storage-macro = "0.16.0"
-cw-storage-plus  = "0.16.0"
-cw-controllers   = "0.16.0"
-cw2              = "0.16.0"
-cw20             = "0.16.0"
-cw721            = "0.16.0"
-cw721-base       = "0.16.0"
-cw-utils         = "0.16.0"
-schemars         = "0.8.11"
-semver           = "1.0.16"
-serde            = { version = "1.0.145", default-features = false, features = ["derive"] }
-thiserror        = "1.0.31"
-anyhow           = "1.0.41"
+cw-storage-plus = "0.16.0"
+cw-controllers = "0.16.0"
+cw2 = "0.16.0"
+cw20 = "0.16.0"
+cw721 = "0.16.0"
+cw721-base = "0.16.0"
+cw-utils = "0.16.0"
+schemars = "0.8.11"
+semver = "1.0.16"
+serde = { version = "1.0.145", default-features = false, features = ["derive"] }
+thiserror = "1.0.31"
+anyhow = "1.0.41"
+sg-std = { version = "2.3.0" }
+sg-multi-test = { version = "2.3.0" }
 
 # dev-dependencies
 cw-multi-test = "0.16.0"
 
 [profile.release.package.loyalty-collection]
 codegen-units = 1
-incremental   = false
+incremental = false
 
 [profile.release.package.loyalty-minter]
 codegen-units = 1
-incremental   = false
+incremental = false
 
 [profile.release]
-rpath            = false
-lto              = true
-overflow-checks  = true
-opt-level        = 3
-debug            = false
+rpath = false
+lto = true
+overflow-checks = true
+opt-level = 3
+debug = false
 debug-assertions = false
