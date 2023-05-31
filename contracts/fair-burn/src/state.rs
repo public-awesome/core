@@ -8,8 +8,6 @@ use cw_storage_plus::Item;
 pub struct Config {
     /// The percentage of funds to be burned
     pub fee_percent: Decimal,
-    // The minimum amount of funds that must be burned before distributions are made
-    pub deductible: u64,
 }
 
 impl Config {
@@ -23,10 +21,6 @@ impl Config {
         ensure!(
             self.fee_percent > Decimal::zero(),
             ContractError::InvalidInput("fee_percent must be positive".to_string())
-        );
-        ensure!(
-            self.deductible > 0u64,
-            ContractError::InvalidInput("deductible must be positive".to_string())
         );
         Ok(())
     }

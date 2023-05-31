@@ -1,6 +1,6 @@
-use cosmwasm_schema::write_api;
+use fair_burn::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 
-use collection::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use cosmwasm_schema::write_api;
 
 fn main() {
     write_api! {

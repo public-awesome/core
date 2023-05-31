@@ -9,7 +9,6 @@ use cosmwasm_std::{
 use cw2::set_contract_version;
 use cw_utils::maybe_addr;
 use sg_std::{create_fund_fairburn_pool_msg, Response, NATIVE_DENOM};
-use std::cmp::max;
 use std::collections::BTreeMap;
 
 // version info for migration info
@@ -30,7 +29,6 @@ pub fn instantiate(
 
     let config = Config {
         fee_percent: Decimal::percent(msg.fee_bps),
-        deductible: msg.deductible,
     };
     config.save(deps.storage)?;
 
@@ -38,8 +36,7 @@ pub fn instantiate(
         .add_attribute("action", "instantiate")
         .add_attribute("contract_name", CONTRACT_NAME)
         .add_attribute("contract_version", CONTRACT_VERSION)
-        .add_attribute("fee_percent", config.fee_percent.to_string())
-        .add_attribute("deductible", config.deductible.to_string());
+        .add_attribute("fee_percent", config.fee_percent.to_string());
 
     Ok(Response::new().add_event(event))
 }
@@ -61,25 +58,20 @@ pub fn execute(
 }
 
 fn calculate_payouts(funds: &Coin, config: &Config) -> (Coin, Option<Coin>) {
-    if funds.amount < Uint128::from(config.deductible) {
-        return (funds.clone(), None);
-    }
-
     let denom = funds.denom.clone();
 
-    let burn_amount = max(
-        funds.amount * config.fee_percent / Uint128::from(100u128),
-        Uint128::from(config.deductible),
-    );
+    let protocol_amount = funds
+        .amount
+        .mul_ceil(config.fee_percent / Uint128::from(100u128));
 
-    let burn_coin = coin(burn_amount.u128(), &denom);
+    let protocol_coin = coin(protocol_amount.u128(), &denom);
 
-    let dist_coin = match funds.amount - burn_amount {
+    let dist_coin = match funds.amount - protocol_amount {
         amount if amount > Uint128::zero() => Some(coin(amount.u128(), denom)),
         _ => None,
     };
 
-    (burn_coin, dist_coin)
+    (protocol_coin, dist_coin)
 }
 
 pub fn execute_fair_burn(
@@ -200,17 +192,13 @@ pub fn query_config(deps: Deps) -> StdResult<ConfigResponse> {
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn sudo(deps: DepsMut, _env: Env, msg: SudoMsg) -> Result<Response, ContractError> {
     match msg {
-        SudoMsg::UpdateConfig {
-            fair_burn_bps,
-            deductible,
-        } => sudo_update_config(deps, fair_burn_bps, deductible),
+        SudoMsg::UpdateConfig { fair_burn_bps } => sudo_update_config(deps, fair_burn_bps),
     }
 }
 
 pub fn sudo_update_config(
     deps: DepsMut,
     fair_burn_bps: Option<u64>,
-    deductible: Option<u64>,
 ) -> Result<Response, ContractError> {
     let mut config = CONFIG.load(deps.storage)?;
 
@@ -219,11 +207,6 @@ pub fn sudo_update_config(
     if let Some(fair_burn_bps) = fair_burn_bps {
         config.fee_percent = Decimal::percent(fair_burn_bps);
         event = event.add_attribute("fee_percent", &config.fee_percent.to_string());
-    }
-
-    if let Some(deductible) = deductible {
-        config.deductible = deductible;
-        event = event.add_attribute("deductible", &config.deductible.to_string());
     }
 
     config.save(deps.storage)?;
@@ -281,10 +264,7 @@ mod tests {
 
         let creator = Addr::unchecked("creator");
 
-        let init_msg = InstantiateMsg {
-            fee_bps: 500,
-            deductible: 10,
-        };
+        let init_msg = InstantiateMsg { fee_bps: 500 };
         let msg = WasmMsg::Instantiate {
             admin: None,
             code_id: fair_burn_id,
@@ -305,10 +285,7 @@ mod tests {
 
         let creator = Addr::unchecked("creator");
 
-        let init_msg = InstantiateMsg {
-            fee_bps: 5000,
-            deductible: 10,
-        };
+        let init_msg = InstantiateMsg { fee_bps: 5000 };
         let fair_burn = app
             .instantiate_contract(fair_burn_id, creator, &init_msg, &[], "FairBurn", None)
             .unwrap();
@@ -361,9 +338,9 @@ mod tests {
             .unwrap();
         let event = find_event(&response, "wasm-fair-burn").unwrap();
         let burn_amount = find_attribute(event, "burn_amount").unwrap();
-        assert_eq!(burn_amount, "2");
+        assert_eq!(burn_amount, "1");
 
-        // Deductible is paid before distributions are made
+        // Fees are calculated correctly
         let response = app
             .execute_contract(
                 burner.clone(),
@@ -374,9 +351,9 @@ mod tests {
             .unwrap();
         let event = find_event(&response, "wasm-fair-burn").unwrap();
         let burn_amount = find_attribute(event, "burn_amount").unwrap();
-        assert_eq!(burn_amount, "10");
+        assert_eq!(burn_amount, "6");
         let dist_amount = find_attribute(event, "dist_amount").unwrap();
-        assert_eq!(dist_amount, "1");
+        assert_eq!(dist_amount, "5");
 
         // Can handle multiple denoms
         let response = app
@@ -389,9 +366,9 @@ mod tests {
             .unwrap();
         let event = find_event(&response, "wasm-fair-burn").unwrap();
         let burn_amount = find_attribute(event, "burn_amount").unwrap();
-        assert_eq!(burn_amount, "10");
+        assert_eq!(burn_amount, "6");
         let dist_amount = find_attribute(event, "dist_amount").unwrap();
-        assert_eq!(dist_amount, "1");
+        assert_eq!(dist_amount, "5");
         let event = find_event(&response, "wasm-fund-fair-burn-pool").unwrap();
         let fair_burn_coin = find_attribute(event, "coin_0").unwrap();
         assert_eq!(fair_burn_coin, format!("11{0}", alt_denom));
@@ -409,12 +386,12 @@ mod tests {
             .unwrap();
         let event = find_event(&response, "wasm-fair-burn").unwrap();
         let burn_amount = find_attribute(event, "burn_amount").unwrap();
-        assert_eq!(burn_amount, "10");
+        assert_eq!(burn_amount, "6");
         let event = find_event(&response, "transfer").unwrap();
         let recipient_address = find_attribute(event, "recipient").unwrap();
         assert_eq!(recipient_address, recipient.to_string());
         let recipient_coin = find_attribute(event, "amount").unwrap();
-        assert_eq!(recipient_coin, format!("1{0}", NATIVE_DENOM));
+        assert_eq!(recipient_coin, format!("5{0}", NATIVE_DENOM));
 
         // Can handle recipient address on alt denom
         let response = app
@@ -429,11 +406,11 @@ mod tests {
             .unwrap();
         let event = find_event(&response, "wasm-fund-fair-burn-pool").unwrap();
         let fund_pool_coin = find_attribute(event, "coin_0").unwrap();
-        assert_eq!(fund_pool_coin, format!("10{0}", alt_denom));
+        assert_eq!(fund_pool_coin, format!("6{0}", alt_denom));
         let event = find_event(&response, "transfer").unwrap();
         let recipient_address = find_attribute(event, "recipient").unwrap();
         assert_eq!(recipient_address, recipient.to_string());
         let recipient_coin = find_attribute(event, "amount").unwrap();
-        assert_eq!(recipient_coin, format!("1{0}", alt_denom));
+        assert_eq!(recipient_coin, format!("5{0}", alt_denom));
     }
 }

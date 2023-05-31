@@ -6,8 +6,6 @@ use crate::state::Config;
 pub struct InstantiateMsg {
     /// The percentage of funds to be burned, represented as basis points
     pub fee_bps: u64,
-    // The minimum amount of funds that must be burned before distributions are made
-    pub deductible: u64,
 }
 
 #[cw_serde]
@@ -24,10 +22,7 @@ pub enum QueryMsg {
 
 #[cw_serde]
 pub enum SudoMsg {
-    UpdateConfig {
-        fair_burn_bps: Option<u64>,
-        deductible: Option<u64>,
-    },
+    UpdateConfig { fair_burn_bps: Option<u64> },
 }
 
 #[cw_serde]
