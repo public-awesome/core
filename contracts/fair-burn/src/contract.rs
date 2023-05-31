@@ -80,7 +80,7 @@ pub fn execute_fair_burn(
     recipient: Option<Addr>,
 ) -> Result<Response, ContractError> {
     ensure!(
-        info.funds.len() > 0,
+        !info.funds.is_empty(),
         ContractError::InvalidInput("must send some coins".to_string())
     );
 
@@ -206,7 +206,7 @@ pub fn sudo_update_config(
 
     if let Some(fair_burn_bps) = fair_burn_bps {
         config.fee_percent = Decimal::percent(fair_burn_bps);
-        event = event.add_attribute("fee_percent", &config.fee_percent.to_string());
+        event = event.add_attribute("fee_percent", config.fee_percent.to_string());
     }
 
     config.save(deps.storage)?;

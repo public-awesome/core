@@ -13,7 +13,7 @@ pub struct Config {
 impl Config {
     pub fn save(&self, storage: &mut dyn Storage) -> Result<(), ContractError> {
         self.validate()?;
-        CONFIG.save(storage, &self)?;
+        CONFIG.save(storage, self)?;
         Ok(())
     }
 
