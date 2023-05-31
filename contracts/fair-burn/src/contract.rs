@@ -216,11 +216,11 @@ pub fn sudo_update_config(
 
 #[cfg(test)]
 mod tests {
-    use crate::msg::{ExecuteMsg, InstantiateMsg};
+    use crate::msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg, SudoMsg};
 
-    use cosmwasm_std::{coin, coins, to_binary, Addr, Coin, Event, StdResult, WasmMsg};
+    use cosmwasm_std::{coin, coins, to_binary, Addr, Coin, Decimal, Event, StdResult, WasmMsg};
     use cw_multi_test::{
-        AppResponse, BankSudo, Contract, ContractWrapper, Executor, SudoMsg as CwSudoMsg,
+        AppResponse, BankSudo, Contract, ContractWrapper, Executor, SudoMsg as CwSudoMsg, WasmSudo,
     };
     use sg_multi_test::StargazeApp;
     use sg_std::{StargazeMsgWrapper, NATIVE_DENOM};
@@ -276,6 +276,44 @@ mod tests {
 
         assert!(response.is_ok());
         assert!(response.unwrap().has_event(&Event::new("instantiate")));
+    }
+
+    #[test]
+    fn try_sudo_update() {
+        let mut app = StargazeApp::default();
+        let fair_burn_id = app.store_code(contract());
+
+        let creator = Addr::unchecked("creator");
+
+        let fee_bps = 5000;
+        let init_msg = InstantiateMsg { fee_bps: fee_bps };
+        let fair_burn = app
+            .instantiate_contract(fair_burn_id, creator, &init_msg, &[], "FairBurn", None)
+            .unwrap();
+
+        let query_msg = QueryMsg::Config {};
+        let response = app
+            .wrap()
+            .query_wasm_smart::<ConfigResponse>(fair_burn.clone(), &query_msg)
+            .unwrap();
+        assert_eq!(response.config.fee_percent, Decimal::percent(fee_bps));
+
+        let new_fee_bps = 4000;
+        let sudo_msg = SudoMsg::UpdateConfig {
+            fair_burn_bps: Some(new_fee_bps),
+        };
+        let response = app.sudo(CwSudoMsg::Wasm(WasmSudo {
+            contract_addr: fair_burn.clone(),
+            msg: to_binary(&sudo_msg).unwrap(),
+        }));
+        assert!(response.is_ok());
+
+        let query_msg = QueryMsg::Config {};
+        let response = app
+            .wrap()
+            .query_wasm_smart::<ConfigResponse>(fair_burn, &query_msg)
+            .unwrap();
+        assert_eq!(response.config.fee_percent, Decimal::percent(new_fee_bps));
     }
 
     #[test]
