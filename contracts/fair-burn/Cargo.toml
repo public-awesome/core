@@ -1,12 +1,12 @@
 [package]
-name = "fair-burn"
-authors = ["Tasio Victoria <tasiovictoria@ujulabs.com>"]
+name        = "sg-fair-burn"
+authors     = ["Tasio Victoria <tasiovictoria@ujulabs.com>"]
 description = "Stargaze Fair Burn"
-version = { workspace = true }
-edition = { workspace = true }
-homepage = { workspace = true }
-repository = { workspace = true }
-license = { workspace = true }
+version     = { workspace = true }
+edition     = { workspace = true }
+homepage    = { workspace = true }
+repository  = { workspace = true }
+license     = { workspace = true }
 
 exclude = [
     # Those files are rust-optimizer artifacts. You might want to commit them for convenience but they should not be part of the source code publication.
@@ -27,16 +27,16 @@ library = []
 
 
 [dependencies]
-cosmwasm-schema = { workspace = true }
-cosmwasm-std = { workspace = true }
+cosmwasm-schema  = { workspace = true }
+cosmwasm-std     = { workspace = true }
 cosmwasm-storage = { workspace = true }
-cw-storage-plus = { workspace = true }
-cw2 = { workspace = true }
-cw-utils = { workspace = true }
-sg-std = { workspace = true }
-schemars = { workspace = true }
-serde = { workspace = true }
-thiserror = { workspace = true }
+cw-storage-plus  = { workspace = true }
+cw2              = { workspace = true }
+cw-utils         = { workspace = true }
+sg-std           = { workspace = true }
+schemars         = { workspace = true }
+serde            = { workspace = true }
+thiserror        = { workspace = true }
 
 [dev-dependencies]
 cw-multi-test = { workspace = true }

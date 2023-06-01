@@ -12,7 +12,7 @@ use sg_std::{create_fund_fairburn_pool_msg, Response, NATIVE_DENOM};
 use std::collections::BTreeMap;
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:fair-burn";
+const CONTRACT_NAME: &str = "crates.io:sg-fair-burn";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg(not(feature = "library"))]
