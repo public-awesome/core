@@ -10,7 +10,7 @@ use crate::error::ContractError;
 use crate::msg::InstantiateMsg;
 use crate::state::{Config, CONFIG, WHITELIST};
 
-const CONTRACT_NAME: &str = "crates.io:stargaze-mutable-whitelist";
+const CONTRACT_NAME: &str = "crates.io:stargaze-whitelist-mutable";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -49,6 +49,7 @@ pub fn execute_add_address(deps: DepsMut, address: String) -> Result<Response, C
     if CONFIG.load(deps.storage)?.bech32 {
         deps.api.addr_validate(&address)?;
     }
+    // TODO: respond with false if address is already in the whitelist
     WHITELIST.insert(deps.storage, &address)?;
 
     Ok(Response::new())
