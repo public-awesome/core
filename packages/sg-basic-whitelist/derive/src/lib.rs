@@ -4,7 +4,7 @@ use syn::{parse_macro_input, AttributeArgs, DataEnum, DeriveInput};
 
 /// Merges the variants of two enums.
 ///
-/// Adapted from cw-plus-plus:
+/// Adapted from cw-plus-plus which is adapted from DAO DAO:
 /// https://github.com/larry0x/cw-plus-plus/blob/main/packages/ownable/derive/src/lib.rs
 fn merge_variants(metadata: TokenStream, left: TokenStream, right: TokenStream) -> TokenStream {
     use syn::Data::Enum;
@@ -67,8 +67,8 @@ fn merge_variants(metadata: TokenStream, left: TokenStream, right: TokenStream) 
 /// #[cw_serde]
 /// #[derive(QueryResponses)]
 /// enum QueryMsg {
-//      #[returns(bool)]
-//      IncludesAddress { address: String },
+///     #[returns(bool)]
+///     IncludesAddress { address: String },
 ///     #[returns(FooResponse)]
 ///     Foo {},
 ///     #[returns(BarResponse)]
