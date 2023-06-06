@@ -1,7 +1,6 @@
 [workspace]
 members = [
     "packages/*",
-    "packages/sg-basic-whitelist",
     "contracts/loyalty/*",
     "contracts/stargaze-mutable-whitelist",
 ]
