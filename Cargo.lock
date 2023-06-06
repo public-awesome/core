@@ -792,6 +792,16 @@ dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
  "cw-ownable",
+ "sg-basic-whitelist-derive",
+]
+
+[[package]]
+name = "sg-basic-whitelist-derive"
+version = "1.0.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
 ]
 
 [[package]]
@@ -801,6 +811,7 @@ dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
  "cw-ownable",
+ "sg-basic-whitelist",
 ]
 
 [[package]]

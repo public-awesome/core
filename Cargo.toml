@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "packages/*",
+    "packages/sg-basic-whitelist",
     "contracts/loyalty/*",
     "contracts/stargaze-mutable-whitelist",
 ]
@@ -43,6 +44,14 @@ codegen-units = 1
 incremental   = false
 
 [profile.release.package.loyalty-minter]
+codegen-units = 1
+incremental   = false
+
+[profile.release.package.sg-basic-whitelist]
+codegen-units = 1
+incremental   = false
+
+[profile.release.package.sg-mutable-whitelist]
 codegen-units = 1
 incremental   = false
 

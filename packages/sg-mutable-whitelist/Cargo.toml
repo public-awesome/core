@@ -27,6 +27,7 @@ library = []
 
 
 [dependencies]
-cosmwasm-schema = { workspace = true }
-cosmwasm-std    = { workspace = true }
-cw-ownable      = { workspace = true }
+cosmwasm-schema    = { workspace = true }
+cosmwasm-std       = { workspace = true }
+cw-ownable         = { workspace = true }
+sg-basic-whitelist = { path = "../sg-basic-whitelist" }
