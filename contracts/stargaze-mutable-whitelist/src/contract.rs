@@ -3,11 +3,10 @@ use cosmwasm_std::entry_point;
 use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Order, StdResult};
 use cw2::set_contract_version;
 use cw_ownable::get_ownership;
-use sg_mutable_whitelist::{ExecuteMsg, QueryMsg};
 use sg_std::Response;
 
 use crate::error::ContractError;
-use crate::msg::InstantiateMsg;
+use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::state::{Config, CONFIG, WHITELIST};
 
 const CONTRACT_NAME: &str = "crates.io:stargaze-whitelist-mutable";

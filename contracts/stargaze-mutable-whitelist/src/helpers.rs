@@ -1,6 +1,7 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{to_binary, Addr, CosmosMsg, StdResult, WasmMsg};
-use sg_mutable_whitelist::ExecuteMsg;
+
+use crate::msg::ExecuteMsg;
 
 #[cw_serde]
 pub struct MutableWhitelistContract(pub Addr);
