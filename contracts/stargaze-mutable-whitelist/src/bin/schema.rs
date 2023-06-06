@@ -1,6 +1,6 @@
 use cosmwasm_schema::write_api;
-
-use loyalty_minter::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use sg_mutable_whitelist::{ExecuteMsg, QueryMsg};
+use stargaze_mutable_whitelist::msg::InstantiateMsg;
 
 fn main() {
     write_api! {
