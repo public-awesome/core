@@ -786,6 +786,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "sg-basic-whitelist"
+version = "1.0.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-ownable",
+]
+
+[[package]]
 name = "sg-mutable-whitelist"
 version = "1.0.0"
 dependencies = [
