@@ -30,4 +30,4 @@ library = []
 cosmwasm-schema    = { workspace = true }
 cosmwasm-std       = { workspace = true }
 cw-ownable         = { workspace = true }
-sg-basic-whitelist = { path = "../sg-basic-whitelist" }
+sg-basic-whitelist = { path = "../sg-basic-whitelist", version = "0.1.0" }

@@ -2,7 +2,7 @@
 name        = "sg-basic-whitelist-derive"
 authors     = ["Shane Vitarana <s+git@publicawesome.com>"]
 description = "Macros for generating code used by the `sg-basic-whitelist` crate"
-version     = { workspace = true }
+version     = "0.1.0"
 edition     = { workspace = true }
 homepage    = { workspace = true }
 repository  = { workspace = true }
