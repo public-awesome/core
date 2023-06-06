@@ -2,6 +2,8 @@ use cosmwasm_schema::{cw_serde, QueryResponses};
 use cw_ownable::{cw_ownable_execute, cw_ownable_query};
 use sg_basic_whitelist::sg_basic_whitelist_query;
 
+use crate::state::Config;
+
 #[cw_serde]
 pub struct InstantiateMsg {
     /// Set to `true` for Cosmos and Stargaze addresses, `false` for Ethereum and others.
@@ -23,6 +25,8 @@ pub enum ExecuteMsg {
 #[cw_serde]
 #[derive(QueryResponses)]
 pub enum QueryMsg {
+    #[returns(Config)]
+    Config {},
     #[returns(u64)]
     Count {},
     #[returns(Vec<String>)]

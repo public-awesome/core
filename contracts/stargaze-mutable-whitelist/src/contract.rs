@@ -82,6 +82,7 @@ fn update_ownership(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
+        QueryMsg::Config {} => to_binary(&CONFIG.load(deps.storage)?),
         QueryMsg::Ownership {} => to_binary(&get_ownership(deps.storage)?),
         QueryMsg::IncludesAddress { address } => to_binary(&query_includes_address(deps, address)),
         QueryMsg::Count {} => to_binary(&query_count(deps)?),
