@@ -567,7 +567,7 @@ checksum = "2b00cc1c228a6782d0f076e7b232802e0c5689d41bb5df366f2a6b6621cfdfe1"
 
 [[package]]
 name = "loyalty-collection"
-version = "1.0.0"
+version = "0.1.0"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -582,7 +582,7 @@ dependencies = [
 
 [[package]]
 name = "loyalty-minter"
-version = "1.0.0"
+version = "0.1.0"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -787,7 +787,7 @@ dependencies = [
 
 [[package]]
 name = "sg-basic-whitelist"
-version = "1.0.0"
+version = "0.1.0"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -797,7 +797,7 @@ dependencies = [
 
 [[package]]
 name = "sg-basic-whitelist-derive"
-version = "1.0.0"
+version = "0.1.0"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -806,7 +806,7 @@ dependencies = [
 
 [[package]]
 name = "sg-mutable-whitelist"
-version = "1.0.0"
+version = "0.1.0"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -875,7 +875,7 @@ dependencies = [
 
 [[package]]
 name = "stargaze-mutable-whitelist"
-version = "1.0.0"
+version = "0.1.0"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",

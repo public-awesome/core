@@ -49,8 +49,10 @@ pub fn execute_add_address(deps: DepsMut, address: String) -> Result<Response, C
     if CONFIG.load(deps.storage)?.bech32 {
         deps.api.addr_validate(&address)?;
     }
-    // TODO: respond with false if address is already in the whitelist
-    WHITELIST.insert(deps.storage, &address)?;
+
+    if !WHITELIST.insert(deps.storage, &address)? {
+        return Err(ContractError::DuplicateAddress {});
+    }
 
     Ok(Response::new())
 }
@@ -101,6 +103,3 @@ pub fn query_list(deps: Deps) -> StdResult<Vec<String>> {
         .items(deps.storage, None, None, Order::Ascending)
         .collect()
 }
-
-#[cfg(test)]
-mod tests {}
