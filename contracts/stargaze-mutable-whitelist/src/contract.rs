@@ -37,14 +37,20 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::AddAddress { address } => execute_add_address(deps, address),
-        ExecuteMsg::RemoveAddress { address } => execute_remove_address(deps, address),
+        ExecuteMsg::AddAddress { address } => execute_add_address(deps, info, address),
+        ExecuteMsg::RemoveAddress { address } => execute_remove_address(deps, info, address),
         ExecuteMsg::UpdateOwnership(action) => update_ownership(deps, env, info, action),
-        ExecuteMsg::Purge {} => execute_purge(deps),
+        ExecuteMsg::Purge {} => execute_purge(deps, info),
     }
 }
 
-pub fn execute_add_address(deps: DepsMut, address: String) -> Result<Response, ContractError> {
+pub fn execute_add_address(
+    deps: DepsMut,
+    info: MessageInfo,
+    address: String,
+) -> Result<Response, ContractError> {
+    cw_ownable::assert_owner(deps.storage, &info.sender)?;
+
     if CONFIG.load(deps.storage)?.bech32 {
         deps.api.addr_validate(&address)?;
     }
@@ -56,13 +62,21 @@ pub fn execute_add_address(deps: DepsMut, address: String) -> Result<Response, C
     Ok(Response::new())
 }
 
-pub fn execute_remove_address(deps: DepsMut, address: String) -> Result<Response, ContractError> {
+pub fn execute_remove_address(
+    deps: DepsMut,
+    info: MessageInfo,
+    address: String,
+) -> Result<Response, ContractError> {
+    cw_ownable::assert_owner(deps.storage, &info.sender)?;
+
     WHITELIST.remove(deps.storage, &address)?;
 
     Ok(Response::new())
 }
 
-pub fn execute_purge(deps: DepsMut) -> Result<Response, ContractError> {
+pub fn execute_purge(deps: DepsMut, info: MessageInfo) -> Result<Response, ContractError> {
+    cw_ownable::assert_owner(deps.storage, &info.sender)?;
+
     WHITELIST.clear(deps.storage);
 
     Ok(Response::new())
