@@ -4,7 +4,10 @@ use cosmwasm_schema::{cw_serde, QueryResponses};
 pub struct InstantiateMsg {}
 
 #[cw_serde]
-pub enum ExecuteMsg {}
+pub enum ExecuteMsg {
+    /// Mint a loyalty token for the given address
+    Mint { address: String },
+}
 
 #[cw_serde]
 #[derive(QueryResponses)]

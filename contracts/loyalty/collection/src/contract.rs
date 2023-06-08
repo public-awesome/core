@@ -1,6 +1,6 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+use cosmwasm_std::{to_binary, Binary, Coin, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 use cw2::set_contract_version;
 use cw_ownable::get_ownership;
 
@@ -38,8 +38,24 @@ pub fn execute(
             address,
             staked_amount,
             data,
-        } => todo!(),
+        } => execute_update_metadata(deps, env, info, address, staked_amount, data),
     }
+}
+
+pub fn execute_update_metadata(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    _address: String,
+    _staked_amount: Coin,
+    _data: Option<String>,
+) -> Result<Response, ContractError> {
+    cw_ownable::assert_owner(deps.storage, &info.sender)?;
+
+    // TODO: get the nft based on the address (which is the token_id)
+    // TODO: update metadata
+
+    Ok(Response::new())
 }
 
 /// Wraps around cw_ownable::update_ownership to extract the result and wrap it in a Stargaze Response
@@ -57,6 +73,7 @@ fn update_ownership(
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::Ownership {} => to_binary(&get_ownership(deps.storage)?),
+        QueryMsg::Metadata { address } => todo!(),
     }
 }
 
