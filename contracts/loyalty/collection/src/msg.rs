@@ -1,5 +1,5 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::Coin;
+use cosmwasm_std::Uint128;
 use cw_ownable::{cw_ownable_execute, cw_ownable_query};
 
 use crate::state::Metadata;
@@ -12,9 +12,10 @@ pub struct InstantiateMsg {
 #[cw_ownable_execute]
 #[cw_serde]
 pub enum ExecuteMsg {
+    // TODO: move this to the minter?
     UpdateMetadata {
         address: String,
-        staked_amount: Coin,
+        staked_amount: Uint128,
         data: Option<String>,
     },
 }
@@ -25,4 +26,6 @@ pub enum ExecuteMsg {
 pub enum QueryMsg {
     #[returns(Metadata)]
     Metadata { address: String },
+    #[returns(Uint128)]
+    TotalStaked { owner: String },
 }

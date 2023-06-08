@@ -1,5 +1,5 @@
 [package]
-name        = "loyalty-collection"
+name        = "stargaze-loyalty-collection"
 authors     = ["Shane Vitarana <s+git@publicawesome.com>"]
 description = "Stargaze Loyalty Collection"
 version     = { workspace = true }

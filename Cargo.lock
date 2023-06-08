@@ -566,22 +566,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2b00cc1c228a6782d0f076e7b232802e0c5689d41bb5df366f2a6b6621cfdfe1"
 
 [[package]]
-name = "loyalty-collection"
-version = "0.1.0"
-dependencies = [
- "cosmwasm-schema",
- "cosmwasm-std",
- "cosmwasm-storage",
- "cw-multi-test",
- "cw-ownable",
- "cw-storage-plus 1.0.1",
- "cw2 1.0.1",
- "schemars",
- "serde",
- "thiserror",
-]
-
-[[package]]
 name = "loyalty-minter"
 version = "0.1.0"
 dependencies = [
@@ -593,6 +577,7 @@ dependencies = [
  "cw2 1.0.1",
  "schemars",
  "serde",
+ "stargaze-loyalty-collection",
  "thiserror",
 ]
 
@@ -862,6 +847,22 @@ checksum = "67cf02bbac7a337dc36e4f5a693db6c21e7863f45070f7064577eb4367a3212b"
 dependencies = [
  "base64ct",
  "der",
+]
+
+[[package]]
+name = "stargaze-loyalty-collection"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cosmwasm-storage",
+ "cw-multi-test",
+ "cw-ownable",
+ "cw-storage-plus 1.0.1",
+ "cw2 1.0.1",
+ "schemars",
+ "serde",
+ "thiserror",
 ]
 
 [[package]]

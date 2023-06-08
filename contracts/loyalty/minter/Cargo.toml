@@ -27,14 +27,15 @@ library = []
 
 
 [dependencies]
-cosmwasm-schema  = { workspace = true }
-cosmwasm-std     = { workspace = true }
-cosmwasm-storage = { workspace = true }
-cw-storage-plus  = { workspace = true }
-cw2              = { workspace = true }
-schemars         = { workspace = true }
-serde            = { workspace = true }
-thiserror        = { workspace = true }
+cosmwasm-schema             = { workspace = true }
+cosmwasm-std                = { workspace = true }
+cosmwasm-storage            = { workspace = true }
+cw-storage-plus             = { workspace = true }
+cw2                         = { workspace = true }
+schemars                    = { workspace = true }
+serde                       = { workspace = true }
+thiserror                   = { workspace = true }
+stargaze-loyalty-collection = { path = "../collection" }
 
 [dev-dependencies]
 cw-multi-test = { workspace = true }

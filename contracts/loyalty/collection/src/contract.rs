@@ -1,6 +1,8 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_binary, Binary, Coin, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+use cosmwasm_std::{
+    to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, Uint128,
+};
 use cw2::set_contract_version;
 use cw_ownable::get_ownership;
 
@@ -47,7 +49,7 @@ pub fn execute_update_metadata(
     _env: Env,
     info: MessageInfo,
     _address: String,
-    _staked_amount: Coin,
+    _staked_amount: Uint128,
     _data: Option<String>,
 ) -> Result<Response, ContractError> {
     cw_ownable::assert_owner(deps.storage, &info.sender)?;
@@ -73,8 +75,25 @@ fn update_ownership(
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::Ownership {} => to_binary(&get_ownership(deps.storage)?),
-        QueryMsg::Metadata { address } => todo!(),
+        QueryMsg::Metadata { address } => to_binary(&query_metadata(deps, address)?),
+        QueryMsg::TotalStaked { owner } => to_binary(&query_total_staked(deps, owner)?),
     }
+}
+
+pub fn query_metadata(deps: Deps, address: String) -> StdResult<Binary> {
+    // TODO: get metadata by address (token_id)
+
+    todo!()
+}
+
+/// Total staked is the sum of all staked amounts for a given owner. If
+/// an owner has multiple items, it will iterate through all of them and
+/// sum the staked amounts.
+pub fn query_total_staked(deps: Deps, owner: String) -> StdResult<Binary> {
+    // TODO: get all tokens by owner of `address` (token_id)
+    // TODO: iterate through metdata to get total stake weight
+
+    todo!()
 }
 
 #[cfg(test)]
