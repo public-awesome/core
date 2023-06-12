@@ -63,6 +63,11 @@ jobs:
           override: true
           components: rustfmt, clippy
 
+      - name: Instal Just
+        uses: extractions/setup-just@v1
+        with:
+          just-version: "1.14.0"
+
       - name: Run cargo fmt
         uses: actions-rs/cargo@v1
         with:
@@ -76,7 +81,7 @@ jobs:
           args: -- -D warnings
 
       - name: Generate Schema
-        run: make schema
+        run: just schema
 
       - name: Schema Changes
         # fails if any changes not committed
