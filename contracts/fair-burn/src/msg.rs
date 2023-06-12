@@ -1,4 +1,5 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
+use cw2::ContractVersion;
 
 use crate::state::Config;
 
@@ -16,18 +17,13 @@ pub enum ExecuteMsg {
 #[cw_serde]
 #[derive(QueryResponses)]
 pub enum QueryMsg {
-    #[returns(ConfigResponse)]
+    #[returns(ContractVersion)]
+    ContractVersion {},
+    #[returns(Config)]
     Config {},
 }
 
 #[cw_serde]
 pub enum SudoMsg {
     UpdateConfig { fair_burn_bps: Option<u64> },
-}
-
-#[cw_serde]
-pub struct ConfigResponse {
-    pub contract: String,
-    pub version: String,
-    pub config: Config,
 }

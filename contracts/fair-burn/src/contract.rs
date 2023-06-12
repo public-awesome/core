@@ -1,18 +1,21 @@
-use crate::error::ContractError;
-use crate::msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg, SudoMsg};
-use crate::state::{Config, CONFIG};
-
 use cosmwasm_std::{
-    coin, ensure, to_binary, Addr, BankMsg, Binary, Coin, Decimal, Deps, DepsMut, Env, Event,
+    ensure, to_binary, Addr, BankMsg, Binary, Coin, Decimal, Deps, DepsMut, Env, Event,
     MessageInfo, StdResult, Uint128,
 };
-use cw2::{get_contract_version, set_contract_version, ContractVersion};
+use cw2::{get_contract_version, set_contract_version};
 use cw_utils::{maybe_addr, NativeBalance};
 use sg_std::{create_fund_fairburn_pool_msg, Response, NATIVE_DENOM};
 use std::collections::BTreeMap;
 
+use crate::{
+    error::ContractError,
+    helpers::calculate_payouts,
+    msg::{ExecuteMsg, InstantiateMsg, QueryMsg, SudoMsg},
+    state::{Config, CONFIG},
+};
+
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:sg-fair-burn";
+const CONTRACT_NAME: &str = "crates.io:stargaze-fair-burn";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg(not(feature = "library"))]
@@ -28,7 +31,7 @@ pub fn instantiate(
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
     let config = Config {
-        fee_percent: Decimal::percent(msg.fee_bps),
+        fee_percent: Decimal::percent(msg.fee_bps) / Uint128::from(100u64),
     };
     config.save(deps.storage)?;
 
@@ -55,23 +58,6 @@ pub fn execute(
             execute_fair_burn(deps, info, maybe_addr(api, recipient)?)
         }
     }
-}
-
-fn calculate_payouts(funds: &Coin, config: &Config) -> (Coin, Option<Coin>) {
-    let denom = funds.denom.clone();
-
-    let protocol_amount = funds
-        .amount
-        .mul_ceil(config.fee_percent / Uint128::from(100u128));
-
-    let protocol_coin = coin(protocol_amount.u128(), &denom);
-
-    let dist_coin = match funds.amount - protocol_amount {
-        amount if amount > Uint128::zero() => Some(coin(amount.u128(), denom)),
-        _ => None,
-    };
-
-    (protocol_coin, dist_coin)
 }
 
 pub fn execute_fair_burn(
@@ -170,19 +156,9 @@ pub fn execute_fair_burn(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::Config {} => to_binary(&query_config(deps)?),
+        QueryMsg::ContractVersion {} => to_binary(&get_contract_version(deps.storage)?),
+        QueryMsg::Config {} => to_binary(&CONFIG.load(deps.storage)?),
     }
-}
-
-pub fn query_config(deps: Deps) -> StdResult<ConfigResponse> {
-    let ContractVersion { contract, version } = get_contract_version(deps.storage)?;
-    let config = CONFIG.load(deps.storage)?;
-
-    Ok(ConfigResponse {
-        contract,
-        version,
-        config,
-    })
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -201,7 +177,7 @@ pub fn sudo_update_config(
     let mut event = Event::new("sudo-update-config");
 
     if let Some(fair_burn_bps) = fair_burn_bps {
-        config.fee_percent = Decimal::percent(fair_burn_bps);
+        config.fee_percent = Decimal::percent(fair_burn_bps) / Uint128::from(100u128);
         event = event.add_attribute("fee_percent", config.fee_percent.to_string());
     }
 
@@ -212,9 +188,14 @@ pub fn sudo_update_config(
 
 #[cfg(test)]
 mod tests {
-    use crate::msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg, SudoMsg};
+    use crate::{
+        msg::{ExecuteMsg, InstantiateMsg, QueryMsg, SudoMsg},
+        state::Config,
+    };
 
-    use cosmwasm_std::{coin, coins, to_binary, Addr, Coin, Decimal, Event, StdResult, WasmMsg};
+    use cosmwasm_std::{
+        coin, coins, to_binary, Addr, Coin, Decimal, Event, StdResult, Uint128, WasmMsg,
+    };
     use cw_multi_test::{
         AppResponse, BankSudo, Contract, ContractWrapper, Executor, SudoMsg as CwSudoMsg, WasmSudo,
     };
@@ -290,9 +271,12 @@ mod tests {
         let query_msg = QueryMsg::Config {};
         let response = app
             .wrap()
-            .query_wasm_smart::<ConfigResponse>(fair_burn.clone(), &query_msg)
+            .query_wasm_smart::<Config>(fair_burn.clone(), &query_msg)
             .unwrap();
-        assert_eq!(response.config.fee_percent, Decimal::percent(fee_bps));
+        assert_eq!(
+            response.fee_percent,
+            Decimal::percent(fee_bps) / Uint128::from(100u64)
+        );
 
         let new_fee_bps = 4000;
         let sudo_msg = SudoMsg::UpdateConfig {
@@ -307,9 +291,12 @@ mod tests {
         let query_msg = QueryMsg::Config {};
         let response = app
             .wrap()
-            .query_wasm_smart::<ConfigResponse>(fair_burn, &query_msg)
+            .query_wasm_smart::<Config>(fair_burn, &query_msg)
             .unwrap();
-        assert_eq!(response.config.fee_percent, Decimal::percent(new_fee_bps));
+        assert_eq!(
+            response.fee_percent,
+            Decimal::percent(new_fee_bps) / Uint128::from(100u64)
+        );
     }
 
     #[test]
