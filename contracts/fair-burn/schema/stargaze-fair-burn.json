@@ -1,5 +1,5 @@
 {
-  "contract_name": "sg-fair-burn",
+  "contract_name": "stargaze-fair-burn",
   "contract_version": "1.0.0",
   "idl_version": "1.0.0",
   "instantiate": {
