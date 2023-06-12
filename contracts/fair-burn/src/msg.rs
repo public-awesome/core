@@ -27,5 +27,7 @@ pub enum SudoMsg {
 
 #[cw_serde]
 pub struct ConfigResponse {
+    pub contract: String,
+    pub version: String,
     pub config: Config,
 }

@@ -6,8 +6,8 @@ use cosmwasm_std::{
     coin, ensure, to_binary, Addr, BankMsg, Binary, Coin, Decimal, Deps, DepsMut, Env, Event,
     MessageInfo, StdResult, Uint128,
 };
-use cw2::set_contract_version;
-use cw_utils::maybe_addr;
+use cw2::{get_contract_version, set_contract_version, ContractVersion};
+use cw_utils::{maybe_addr, NativeBalance};
 use sg_std::{create_fund_fairburn_pool_msg, Response, NATIVE_DENOM};
 use std::collections::BTreeMap;
 
@@ -84,30 +84,22 @@ pub fn execute_fair_burn(
         ContractError::InvalidInput("must send some coins".to_string())
     );
 
+    let mut funds_normalized = NativeBalance(info.funds);
+    funds_normalized.normalize();
+
     let mut response = Response::new();
 
     let config = CONFIG.load(deps.storage)?;
-
-    let coin_map = info.funds.iter().fold(BTreeMap::new(), |mut acc, c| {
-        let entry = acc.entry(c.denom.clone()).or_insert(Uint128::zero());
-        *entry += c.amount;
-        acc
-    });
 
     let mut payout_map: BTreeMap<String, Vec<Coin>> = BTreeMap::new();
 
     let fair_burn_pool_key = "fair-burn-pool".to_string();
 
-    for (denom, amount) in coin_map {
-        ensure!(
-            amount > Uint128::zero(),
-            ContractError::InvalidInput("must send non zero amounts".to_string())
-        );
-
-        if denom == NATIVE_DENOM {
+    for funds in funds_normalized.into_vec() {
+        if funds.denom == NATIVE_DENOM {
             let mut event = Event::new("fair-burn");
 
-            let (burn_coin, dist_coin) = calculate_payouts(&coin(amount.u128(), &denom), &config);
+            let (burn_coin, dist_coin) = calculate_payouts(&funds, &config);
 
             event = event.add_attribute("burn_amount", burn_coin.amount.to_string());
             response = response.add_message(BankMsg::Burn {
@@ -132,8 +124,6 @@ pub fn execute_fair_burn(
 
             response = response.add_event(event);
         } else {
-            let funds = coin(amount.u128(), &denom);
-
             let (fee_coin, dist_coin) = match recipient {
                 Some(_) => calculate_payouts(&funds, &config),
                 None => (funds, None),
@@ -145,8 +135,9 @@ pub fn execute_fair_burn(
                 .push(fee_coin.clone());
 
             if let Some(dist_coin) = dist_coin {
+                let recipient = recipient.as_ref().unwrap().to_string();
                 payout_map
-                    .entry(recipient.as_ref().unwrap().to_string())
+                    .entry(recipient)
                     .or_insert(vec![])
                     .push(dist_coin.clone());
             }
@@ -184,9 +175,14 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 }
 
 pub fn query_config(deps: Deps) -> StdResult<ConfigResponse> {
+    let ContractVersion { contract, version } = get_contract_version(deps.storage)?;
     let config = CONFIG.load(deps.storage)?;
 
-    Ok(ConfigResponse { config })
+    Ok(ConfigResponse {
+        contract,
+        version,
+        config,
+    })
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
