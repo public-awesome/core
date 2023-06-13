@@ -1,13 +1,12 @@
 # Based on https://github.com/actions-rs/example/blob/master/.github/workflows/quickstart.yml
 
-on: [push, pull_request]
+on: [pull_request]
 
 name: Basic
 
 jobs:
-
-  test:
-    name: Test Suite
+  compile:
+    name: Compile
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
@@ -17,17 +16,9 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: 1.60.0
+          toolchain: 1.68.2
           target: wasm32-unknown-unknown
           override: true
-
-      - name: Run unit tests
-        uses: actions-rs/cargo@v1
-        with:
-          command: unit-test
-          args: --locked
-        env:
-          RUST_BACKTRACE: 1
 
       - name: Compile WASM contract
         uses: actions-rs/cargo@v1
@@ -37,8 +28,28 @@ jobs:
         env:
           RUSTFLAGS: "-C link-arg=-s"
 
-  lints:
-    name: Lints
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-latest
+    container:
+      image: xd009642/tarpaulin:0.24.0
+      options: --security-opt seccomp=unconfined
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Generate code coverage
+        run: |
+          cargo tarpaulin --verbose --workspace --timeout 120 --out Xml
+
+      - name: Upload to codecov.io
+        uses: codecov/codecov-action@v2
+        with:
+          token: ${{secrets.CODECOV_TOKEN}}
+          fail_ci_if_error: true
+
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
@@ -48,7 +59,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: 1.60.0
+          toolchain: 1.68.2
           override: true
           components: rustfmt, clippy
 
@@ -65,11 +76,14 @@ jobs:
           args: -- -D warnings
 
       - name: Generate Schema
-        uses: actions-rs/cargo@v1
-        with:
-          command: schema
-          args: --locked
+        run: sh scripts/schema.sh
 
       - name: Schema Changes
         # fails if any changes not committed
-        run: git diff --exit-code schema
+        run: |
+          CHANGES_IN_REPO=$(git status --porcelain)
+          if [[ -n "$CHANGES_IN_REPO" ]]; then
+            echo "Repository is dirty. Showing 'git status' and 'git --no-pager diff' for debugging now:"
+            git status && git --no-pager diff
+            exit 1
+          fi
