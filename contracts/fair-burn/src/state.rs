@@ -20,7 +20,7 @@ impl Config {
     fn validate(&self) -> Result<(), ContractError> {
         ensure!(
             self.fee_percent > Decimal::zero(),
-            ContractError::InvalidInput("fee_percent must be positive".to_string())
+            ContractError::InvalidConfig("fee_percent must be positive".to_string())
         );
         Ok(())
     }

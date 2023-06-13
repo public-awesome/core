@@ -1,4 +1,4 @@
-use cosmwasm_std::{coin, to_binary, Addr, Coin, Uint128, WasmMsg};
+use cosmwasm_std::{coin, to_binary, Addr, Coin, Decimal, Uint128, WasmMsg};
 use sg_std::Response;
 
 use crate::{msg::ExecuteMsg, state::Config};
@@ -31,4 +31,8 @@ pub fn append_fair_burn_msg(
         .unwrap(),
         funds,
     })
+}
+
+pub fn bps_to_decimal(bps: u64) -> Decimal {
+    Decimal::percent(bps) / Uint128::from(100u64)
 }

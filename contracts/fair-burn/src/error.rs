@@ -6,6 +6,9 @@ pub enum ContractError {
     #[error("{0}")]
     Std(#[from] StdError),
 
-    #[error("Invalid input: {0}")]
-    InvalidInput(String),
+    #[error("Zero funds: must send non-zero funds to this contract")]
+    ZeroFunds,
+
+    #[error("Invalid config: {0}")]
+    InvalidConfig(String),
 }

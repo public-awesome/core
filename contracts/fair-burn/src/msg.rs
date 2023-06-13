@@ -25,5 +25,5 @@ pub enum QueryMsg {
 
 #[cw_serde]
 pub enum SudoMsg {
-    UpdateConfig { fair_burn_bps: Option<u64> },
+    UpdateConfig { fee_bps: Option<u64> },
 }

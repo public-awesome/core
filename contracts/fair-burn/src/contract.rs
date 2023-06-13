@@ -1,6 +1,6 @@
 use cosmwasm_std::{
-    ensure, to_binary, Addr, BankMsg, Binary, Coin, Decimal, Deps, DepsMut, Env, Event,
-    MessageInfo, StdResult, Uint128,
+    ensure, to_binary, Addr, BankMsg, Binary, Coin, Deps, DepsMut, Env, Event, MessageInfo,
+    StdResult,
 };
 use cw2::{get_contract_version, set_contract_version};
 use cw_utils::{maybe_addr, NativeBalance};
@@ -9,7 +9,7 @@ use std::collections::BTreeMap;
 
 use crate::{
     error::ContractError,
-    helpers::calculate_payouts,
+    helpers::{bps_to_decimal, calculate_payouts},
     msg::{ExecuteMsg, InstantiateMsg, QueryMsg, SudoMsg},
     state::{Config, CONFIG},
 };
@@ -31,7 +31,7 @@ pub fn instantiate(
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
     let config = Config {
-        fee_percent: Decimal::percent(msg.fee_bps) / Uint128::from(100u64),
+        fee_percent: bps_to_decimal(msg.fee_bps),
     };
     config.save(deps.storage)?;
 
@@ -65,13 +65,10 @@ pub fn execute_fair_burn(
     info: MessageInfo,
     recipient: Option<Addr>,
 ) -> Result<Response, ContractError> {
-    ensure!(
-        !info.funds.is_empty(),
-        ContractError::InvalidInput("must send some coins".to_string())
-    );
-
     let mut funds_normalized = NativeBalance(info.funds);
     funds_normalized.normalize();
+
+    ensure!(!funds_normalized.is_empty(), ContractError::ZeroFunds);
 
     let mut response = Response::new();
 
@@ -164,20 +161,17 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn sudo(deps: DepsMut, _env: Env, msg: SudoMsg) -> Result<Response, ContractError> {
     match msg {
-        SudoMsg::UpdateConfig { fair_burn_bps } => sudo_update_config(deps, fair_burn_bps),
+        SudoMsg::UpdateConfig { fee_bps } => sudo_update_config(deps, fee_bps),
     }
 }
 
-pub fn sudo_update_config(
-    deps: DepsMut,
-    fair_burn_bps: Option<u64>,
-) -> Result<Response, ContractError> {
+pub fn sudo_update_config(deps: DepsMut, fee_bps: Option<u64>) -> Result<Response, ContractError> {
     let mut config = CONFIG.load(deps.storage)?;
 
     let mut event = Event::new("sudo-update-config");
 
-    if let Some(fair_burn_bps) = fair_burn_bps {
-        config.fee_percent = Decimal::percent(fair_burn_bps) / Uint128::from(100u128);
+    if let Some(fee_bps) = fee_bps {
+        config.fee_percent = bps_to_decimal(fee_bps);
         event = event.add_attribute("fee_percent", config.fee_percent.to_string());
     }
 
@@ -280,7 +274,7 @@ mod tests {
 
         let new_fee_bps = 4000;
         let sudo_msg = SudoMsg::UpdateConfig {
-            fair_burn_bps: Some(new_fee_bps),
+            fee_bps: Some(new_fee_bps),
         };
         let response = app.sudo(CwSudoMsg::Wasm(WasmSudo {
             contract_addr: fair_burn.clone(),
