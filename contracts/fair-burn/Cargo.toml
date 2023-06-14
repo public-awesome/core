@@ -1,12 +1,13 @@
 [package]
-name        = "stargaze-fair-burn"
-version     = "1.0.1"
-authors     = ["Tasio Victoria <tasiovictoria@ujulabs.com>"]
-description = "Stargaze Fair Burn"
-edition     = { workspace = true }
-homepage    = { workspace = true }
-repository  = { workspace = true }
-license     = { workspace = true }
+name          = "stargaze-fair-burn"
+version       = "1.0.2"
+authors       = ["Tasio Victoria <tasiovictoria@ujulabs.com>"]
+description   = "Stargaze Fair Burn"
+documentation = "https://docs.rs/stargaze-fair-burn"
+edition       = { workspace = true }
+homepage      = { workspace = true }
+repository    = { workspace = true }
+license       = { workspace = true }
 
 exclude = [
     # Those files are rust-optimizer artifacts. You might want to commit them for convenience but they should not be part of the source code publication.
