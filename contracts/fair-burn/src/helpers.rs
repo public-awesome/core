@@ -17,6 +17,19 @@ pub fn calculate_payouts(funds: &Coin, config: &Config) -> (Coin, Option<Coin>) 
     (protocol_coin, dist_coin)
 }
 
+/// Invoke `append_fair_burn_msg` to pay the fair burn contract and distribute funds.
+///
+/// # Arguments
+///
+/// * `fair_burn_addr` - The address of the fair burn contract.
+/// * `funds` - A vector of [cosmwasm_std::Coin] to be distributed.
+/// * `recipient` - A recipient address that recieve excess funds (optional).
+/// * `response` - The [cosmwasm_std::Response] object used to append the message.
+///
+/// # Returns
+///
+/// * `Response` - The [cosmwasm_std::Response] with the appended message.
+///
 pub fn append_fair_burn_msg(
     fair_burn_addr: &Addr,
     funds: Vec<Coin>,
