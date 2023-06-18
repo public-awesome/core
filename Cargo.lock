@@ -805,16 +805,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sg-mutable-whitelist"
-version = "0.1.0"
-dependencies = [
- "cosmwasm-schema",
- "cosmwasm-std",
- "cw-ownable",
- "sg-basic-whitelist",
-]
-
-[[package]]
 name = "sg-std"
 version = "2.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -886,7 +876,7 @@ dependencies = [
  "cw2 0.16.0",
  "schemars",
  "serde",
- "sg-mutable-whitelist",
+ "sg-basic-whitelist",
  "sg-std",
  "thiserror",
 ]

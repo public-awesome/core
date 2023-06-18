@@ -1,6 +1,5 @@
 use cosmwasm_schema::write_api;
-use sg_mutable_whitelist::{ExecuteMsg, QueryMsg};
-use stargaze_mutable_whitelist::msg::InstantiateMsg;
+use stargaze_mutable_whitelist::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 
 fn main() {
     write_api! {

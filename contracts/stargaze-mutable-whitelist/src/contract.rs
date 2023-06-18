@@ -3,11 +3,10 @@ use cosmwasm_std::entry_point;
 use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Order, StdResult};
 use cw2::set_contract_version;
 use cw_ownable::get_ownership;
-use sg_mutable_whitelist::{ExecuteMsg, QueryMsg};
 use sg_std::Response;
 
 use crate::error::ContractError;
-use crate::msg::InstantiateMsg;
+use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::state::{Config, CONFIG, WHITELIST};
 
 const CONTRACT_NAME: &str = "crates.io:stargaze-whitelist-mutable";
@@ -83,6 +82,7 @@ fn update_ownership(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
+        QueryMsg::Config {} => to_binary(&CONFIG.load(deps.storage)?),
         QueryMsg::Ownership {} => to_binary(&get_ownership(deps.storage)?),
         QueryMsg::IncludesAddress { address } => to_binary(&query_includes_address(deps, address)),
         QueryMsg::Count {} => to_binary(&query_count(deps)?),
