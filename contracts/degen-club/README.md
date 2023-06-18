@@ -12,7 +12,6 @@ The Loyalty Collection is a contract that stores all the LNFTs.
 
 ```rs
 pub struct LoyaltyMetadata {
-    pub loyalty_address: Addr,
     pub staked_amount: [Coin],
     pub data: Option<String>,
     pub updated_at: u64,
@@ -42,11 +41,9 @@ pub enum QueryMsg {
 }
 ```
 
-Note that a user may have multiple wallets that stake. For example they may have a cold wallet that does the majority of staking, and a hot wallet for use for minting on Stargaze. To determine the tier of a user, we need to sum up the amount of STARS staked across all wallets. To associate wallets, a user can transfer their LNFT to their hot wallet. The `TotalStakedAmount` query returns the total amount of STARS staked by a user across all wallets.
-
 ## Loyalty Minter (loyalty-minter)
 
-The Loyalty Minter is a contract that allows users to mint LNFTs. It is initialized with a minimum stake amount required to mint an LNFT. The minimum stake amount is denominated in STARS.
+The Loyalty Minter is a contract that allows users to mint LNFTs. It is initialized with a minimum stake amount required to mint an LNFT. The minimum stake amount is denominated in STARS. The Loyalty Minter is a singleton contract.
 
 ```rs
 pub struct Instantiate {
@@ -56,9 +53,11 @@ pub struct Instantiate {
 
 ```rs
 pub struct MintMsg<T> {
-    pub token_id: String,           // auto-incrementing ID
+    pub token_id: String,           // Stargaze Name
     pub owner: String,
     pub token_uri: Option<String>,  // ignored
     pub extension: T,               // `LoyaltyMetadata`
 }
 ```
+
+The unique `token_id` for the collection is the Stargaze Name since a name is required. On each 24 hour update, the name owner is checked to see if it matches the associated LNFT owner. If it does not, the LNFT is burned. If a user changes their Stargaze Name, they must mint a new LNFT.
