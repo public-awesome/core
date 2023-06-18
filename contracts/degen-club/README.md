@@ -22,7 +22,7 @@ pub struct LoyaltyMetadata {
 
 An optional `data` field makes the metadata future-proof and open for extension.
 
-When new LNFTs are minted, we have to keep track of them in a queue to be updated periodically in `end_block()`. We can use a [`Deque`](https://github.com/cosmWasm/cw-storage-plus#deque) for this. If encountering an LNFT that has been burned, we can remove it from the queue.
+When new LNFTs are minted, we have to keep track of them in a queue to be updated periodically in `end_block()`. We can use a [`Deque`](https://github.com/cosmWasm/cw-storage-plus#deque) for this. If encountering an LNFT that has been burned, we can remove it from the queue. On each block, we can process a fixed number of LNFTs to avoid exceeding the block gas limit with `per_block_limit`.
 
 ```rs
 // String = `token_id`
@@ -59,13 +59,15 @@ The Loyalty Minter is a contract that allows users to mint LNFTs. It is initiali
 ```rs
 pub struct Instantiate {
     pub minimum_stake_amount: Coin,
-    pub owner: String, // use cw-ownable
+    pub owner: String,               // use cw-ownable
+    pub per_block_limit: u64,        // how many LNFTs to process per `end_block()`
 }
 ```
 
 ```rs
 pub struct Config {
     pub minimum_stake_amount: Coin,
+    pub per_block_limit: u64,
 }
 ```
 
@@ -84,8 +86,14 @@ Since this minter is a singleton contract, it's config has to be updated via a g
 
 ```rs
 pub enum SudoMsg {
-    UpdateConfig {
+    UpdateMinimumStakeAmount {
         minimum_stake_amount: Coin,
+    },
+    UpdateOwner {
+        owner: String,
+    },
+    UpdatePerBlockLimit {
+        per_block_limit: u64,
     },
 }
 ```
