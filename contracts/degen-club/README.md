@@ -2,13 +2,13 @@
 
 The Stargaze Degen Club is a loyalty program that rewards users for staking STARS in the form of reduced fees. The program is implemented as a set of NFT smart contracts. Users are assigned to a tier based on the amount of STARS they have staked. The tier determines the amount of fees they pay.
 
-A user mints a Stargaze Loyalty NFT (LNFT) to join the Stargaze Degen Club. It contains metadata that includes the amount of STARS they have staked. The staked amount is calculated on mint, and subsequently updated every 24 hours via ABCI end blocker callbacks. LNFTs are non-transferable, and can only be minted by the user that staked the STARS.
+A user mints a Stargaze Loyalty NFT (LNFT) to join the Stargaze Degen Club. It contains metadata that includes the amount of STARS they have staked. The staked amount is calculated on mint, and subsequently updated periodically via ABCI end blocker callbacks. LNFTs are non-transferable, and can only be minted by the user that staked the STARS.
 
 A Stargaze Name is required to mint an LNFT. In the future, when account abstraction and sub-accounts are implemented, multiple accounts can be associated with a single LNFT. This is useful in the case, for example, when you have a cold wallet that does the majority of staking, and a hot wallet for use for minting and trading on Stargaze.
 
-## Loyalty Collection (sg721-loyalty)
+## Loyalty Collection
 
-The Loyalty Collection is a cw721 contract that stores all the LNFTs.
+The Loyalty Collection is a [`cw721-onchain-metadata`](https://github.com/CosmWasm/cw-nfts/tree/main/contracts/cw721-metadata-onchain) contract that stores all the LNFTs.
 
 ### State
 
@@ -52,7 +52,7 @@ pub enum QueryMsg {
 }
 ```
 
-## Loyalty Minter (loyalty-minter)
+## Loyalty Minter
 
 The Loyalty Minter is a contract that allows users to mint LNFTs. It is initialized with a minimum stake amount required to mint an LNFT. The minimum stake amount is denominated in STARS. The Loyalty Minter is a singleton contract.
 
