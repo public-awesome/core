@@ -1,8 +1,6 @@
-# Stargaze Core Contracts
+# Stargaze Degen Club (SDC)
 
-## Stargaze Loyalty Program (SLP)
-
-The Stargaze Loyalty Program is a program that rewards users for staking STARS in the form of reduced fees. The program is implemented as a set of NFT smart contracts. Users are assigned to a tier based on the amount of STARS they have staked. The tier determines the amount of fees they pay.
+The Stargaze Degen Club is a loyalty program that rewards users for staking STARS in the form of reduced fees. The program is implemented as a set of NFT smart contracts. Users are assigned to a tier based on the amount of STARS they have staked. The tier determines the amount of fees they pay.
 
 A user mints a Stargaze Loyalty NFT (LNFT) to join the Stargaze Loyalty Program. It contains metadata that includes the amount of STARS they have staked. The staked amount is calculated on mint, and subsequently updated every 24 hours via ABCI end blocker callbacks. LNFTs are non-transferable, and can only be minted by the user that staked the STARS.
 

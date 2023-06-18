@@ -1,7 +1,7 @@
 [package]
-name        = "loyalty-minter"
+name        = "stargaze-loyalty-minter"
 authors     = ["Shane Vitarana <s+git@publicawesome.com>"]
-description = "Stargaze Loyalty Minter"
+description = "Stargaze Loyalty NFT (LNFT) Minter"
 version     = { workspace = true }
 edition     = { workspace = true }
 homepage    = { workspace = true }
