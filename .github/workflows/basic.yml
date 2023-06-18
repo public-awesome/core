@@ -63,6 +63,12 @@ jobs:
           override: true
           components: rustfmt, clippy
 
+      - name: Run cargo doc
+        uses: actions-rs/cargo@v1
+        with:
+          command: doc
+          args: -F library
+
       - name: Run cargo fmt
         uses: actions-rs/cargo@v1
         with:

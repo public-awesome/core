@@ -1,5 +1,5 @@
 use cosmwasm_std::{
-    ensure, to_binary, Addr, BankMsg, Binary, Coin, Deps, DepsMut, Env, Event, MessageInfo,
+    ensure, to_binary, Addr, BankMsg, Binary, Coin, Deps, DepsMut, Empty, Env, Event, MessageInfo,
     StdResult,
 };
 use cw2::{get_contract_version, set_contract_version};
@@ -180,6 +180,12 @@ pub fn sudo_update_config(deps: DepsMut, fee_bps: Option<u64>) -> Result<Respons
     Ok(Response::new().add_event(event))
 }
 
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn migrate(deps: DepsMut, _env: Env, _msg: Empty) -> Result<Response, ContractError> {
+    set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+    Ok(Response::new())
+}
+
 #[cfg(test)]
 mod tests {
     use crate::{
@@ -354,6 +360,7 @@ mod tests {
         let event = find_event(&response, "wasm-fair-burn").unwrap();
         let burn_amount = find_attribute(event, "burn_amount").unwrap();
         assert_eq!(burn_amount, "1");
+        println!("{:?}", response);
 
         // Fees are calculated correctly
         let response = app

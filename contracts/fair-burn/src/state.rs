@@ -1,4 +1,4 @@
-use crate::ContractError;
+use crate::error::ContractError;
 
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{ensure, Decimal, Storage};

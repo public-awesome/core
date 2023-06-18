@@ -1,5 +1,5 @@
 [workspace]
-members  = ["contracts/fair-burn"]
+members  = ["contracts/fair-burn", "test/*"]
 resolver = "2"
 
 [workspace.package]
@@ -10,27 +10,37 @@ repository = "https://github.com/public-awesome/core"
 license    = "Apache-2.0"
 
 [workspace.dependencies]
-cosmwasm-schema  = "1.2.1"
-cosmwasm-std     = "1.2.1"
-cosmwasm-storage = "1.2.1"
-cw-storage-macro = "0.16.0"
-cw-storage-plus  = "0.16.0"
-cw-controllers   = "0.16.0"
-cw2              = "0.16.0"
-cw20             = "0.16.0"
-cw721            = "0.16.0"
-cw721-base       = "0.16.0"
-cw-utils         = "0.16.0"
-schemars         = "0.8.11"
-semver           = "1.0.16"
-serde            = { version = "1.0.145", default-features = false, features = ["derive"] }
-thiserror        = "1.0.31"
-anyhow           = "1.0.41"
-sg-std           = { version = "2.3.0" }
-sg-multi-test    = { version = "2.3.0" }
+stargaze-fair-burn = { path = "contracts/fair-burn" }
+cosmwasm-schema    = "1.2.1"
+cosmwasm-std       = "1.2.1"
+cosmwasm-storage   = "1.2.1"
+cw-storage-macro   = "0.16.0"
+cw-storage-plus    = "0.16.0"
+cw-controllers     = "0.16.0"
+cw2                = "0.16.0"
+cw20               = "0.16.0"
+cw721              = "0.16.0"
+cw721-base         = "0.16.0"
+cw-utils           = "0.16.0"
+schemars           = "0.8.11"
+semver             = "1.0.16"
+serde              = { version = "1.0.145", default-features = false, features = ["derive"] }
+thiserror          = "1.0.31"
+anyhow             = "1.0.41"
+sg-std             = { version = "2.3.0" }
+sg-multi-test      = { version = "2.3.0" }
 
 # dev-dependencies
-cw-multi-test = "0.16.0"
+cw-multi-test  = "0.16.0"
+cosm-orc       = "3.0.1"
+cosm-tome      = "0.1.1"
+assert_matches = "1.5"
+serde_json     = "1.0"
+env_logger     = "0.9.0"
+test-context   = "0.1.4"
+once_cell      = "1.13.0"
+rand           = "0.8"
+itertools      = "0.10.5"
 
 [profile.release]
 rpath            = false

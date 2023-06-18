@@ -1,0 +1,21 @@
+[package]
+name       = "e2e-tests"
+version    = { workspace = true }
+edition    = { workspace = true }
+repository = { workspace = true }
+license    = { workspace = true }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+stargaze-fair-burn = { workspace = true }
+cosmwasm-std       = { workspace = true }
+cw-utils           = { workspace = true }
+cosm-orc           = { workspace = true }
+cosm-tome          = { workspace = true }
+assert_matches     = { workspace = true }
+serde_json         = { workspace = true }
+env_logger         = { workspace = true }
+test-context       = { workspace = true }
+once_cell          = { workspace = true }
+serde              = { workspace = true }
+rand               = { workspace = true }
+itertools          = { workspace = true }
