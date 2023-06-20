@@ -9,8 +9,7 @@
 //!
 //! - `elfagar-1: stars1mp4dg9mst3hxn5xvcd9zllyx6gguu5jsp5tyt9nsfrtghhwj2akqudhls8`
 
-#[allow(dead_code)]
-mod contract;
+pub mod contract;
 mod error;
 mod helpers;
 #[doc(hidden)]
