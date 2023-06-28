@@ -49,3 +49,19 @@ pub fn append_fair_burn_msg(
 pub fn bps_to_decimal(bps: u64) -> Decimal {
     Decimal::percent(bps) / Uint128::from(100u64)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_append_fair_burn_msg() {
+        let fair_burn_addr = Addr::unchecked("fair-burn");
+        let funds = vec![coin(100, "uusd")];
+        let recipient = Some(Addr::unchecked("recipient"));
+        let response = Response::default();
+
+        let response = append_fair_burn_msg(&fair_burn_addr, funds, recipient.as_ref(), response);
+        assert_eq!(response.messages.len(), 1);
+    }
+}
