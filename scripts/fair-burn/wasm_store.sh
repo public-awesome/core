@@ -2,9 +2,9 @@ set -eux
 
 CONTRACT=artifacts/stargaze_fair_burn.wasm
 
-TITLE="Stargaze Fair Burn v1.0.2" 
-DESCRIPTION=$(cat scripts/markdown/stargaze_fair_burn-v1.0.2.md | jq -Rsa | tr -d '"')
-SOURCE="https://github.com/public-awesome/core/releases/tag/stargaze_fair_burn-v1.0.2"
+TITLE="Stargaze Fair Burn v1.0.4" 
+DESCRIPTION=$(cat scripts/markdown/stargaze_fair_burn-v1.0.4.md | jq -Rsa | tr -d '"')
+SOURCE="https://github.com/public-awesome/core/releases/tag/stargaze_fair_burn-v1.0.4"
 BUILDER="cosmwasm/workspace-optimizer:0.12.13"
 HASH="886deb781278824762fc9d0d167e1e4fd31fd5d9aec34356d5d02889b0223457"
 
