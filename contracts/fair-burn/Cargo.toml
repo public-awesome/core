@@ -1,6 +1,6 @@
 [package]
 name          = "stargaze-fair-burn"
-version       = "1.0.2"
+version       = "1.0.4"
 authors       = ["Tasio Victoria <tasiovictoria@ujulabs.com>"]
 description   = "Stargaze Fair Burn"
 documentation = "https://docs.rs/stargaze-fair-burn"
