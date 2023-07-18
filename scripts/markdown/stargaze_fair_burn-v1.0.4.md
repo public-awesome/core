@@ -24,7 +24,7 @@ docker run --rm -v "$(pwd)":/code --platform linux/amd64 \
 This results in the following SHA256 checksum:
 
 ```
-886deb781278824762fc9d0d167e1e4fd31fd5d9aec34356d5d02889b0223457  stargaze_fair_burn.wasm
+bf1497f4303d20c1db5f1af2ccec7b367e150c84c5e86f6a2798a1c4cc0d52c9  stargaze_fair_burn.wasm
 ```
 
 ### Verify On-chain Contract
