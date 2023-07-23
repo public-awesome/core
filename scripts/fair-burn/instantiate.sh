@@ -1,13 +1,23 @@
-FAIR_BURN_ELGAFAR_CODE_ID=2566
+CODE_ID=74
 MSG=$(cat <<EOF
 {
   "fee_bps": 5000
 }
-
 EOF
 )
 
-starsd tx wasm instantiate $FAIR_BURN_ELGAFAR_CODE_ID  "$MSG"  --label "stargaze-fair-burn" --admin "stars1vs6ezyqu2mk6x9k5uwvzjx0thsvdhq90u3vvw0" \
-  --from testnet-1 --gas-prices 0.1ustars --gas-adjustment 1.7 --gas auto \
-  -b block -o json | jq .
+FROM="hot-wallet"
+CHAIN_ID="stargaze-1"
+NODE="https://rpc.stargaze-apis.com:443"
 
+starsd tx wasm instantiate $CODE_ID  "$MSG"  \
+  --label "stargaze-fair-burn" \
+  --from "$FROM" \
+  --chain-id "$CHAIN_ID" \
+  --node "$NODE" \
+  --gas-prices 1ustars \
+  --gas-adjustment 1.7 \
+  --gas auto \
+  --no-admin \
+  -b block \
+  -o json | jq .
