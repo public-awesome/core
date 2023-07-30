@@ -1,6 +1,5 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Uint128;
-use cw_ownable::{cw_ownable_execute, cw_ownable_query};
 
 use crate::state::Metadata;
 
@@ -9,7 +8,6 @@ pub struct InstantiateMsg {
     pub owner: String,
 }
 
-#[cw_ownable_execute]
 #[cw_serde]
 pub enum ExecuteMsg {
     // TODO: move this to the minter?
@@ -20,7 +18,6 @@ pub enum ExecuteMsg {
     },
 }
 
-#[cw_ownable_query]
 #[cw_serde]
 #[derive(QueryResponses)]
 pub enum QueryMsg {
