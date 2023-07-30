@@ -55,6 +55,14 @@ pub fn execute_update_metadata(
     Ok(Response::new())
 }
 
+// TODO: move to a common place to minter and collection can use the same logic
+// fn stake_weight() -> u128 {
+
+//     //
+
+//     0u128
+// }
+
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
