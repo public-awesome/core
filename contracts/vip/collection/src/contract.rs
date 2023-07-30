@@ -1,7 +1,7 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, Uint128,
+    to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, Uint128,
 };
 use cw2::set_contract_version;
 
@@ -55,13 +55,15 @@ pub fn execute_update_metadata(
     Ok(Response::new())
 }
 
-// TODO: move to a common place to minter and collection can use the same logic
-// fn stake_weight() -> u128 {
+pub fn total_staked(deps: Deps, address: Addr) -> StdResult<u128> {
+    let total = deps
+        .querier
+        .query_all_delegations(address)?
+        .iter()
+        .fold(0, |acc, d| acc + d.amount.amount.u128());
 
-//     //
-
-//     0u128
-// }
+    Ok(total)
+}
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {

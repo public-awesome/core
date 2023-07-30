@@ -2,6 +2,7 @@
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, Uint128};
 use cw2::set_contract_version;
+use stargaze_vip_collection::contract::total_staked;
 use stargaze_vip_collection::state::Metadata;
 
 use crate::error::ContractError;
@@ -35,12 +36,7 @@ pub fn execute(
 }
 
 pub fn execute_mint(deps: DepsMut, env: Env, address: String) -> Result<Response, ContractError> {
-    // TODO: get the total staked for the address
-    let delegations = deps.querier.query_all_delegations(address)?;
-    // NOTE: assuming the staked denom is the same as the stake weight denom
-    let total_staked = delegations
-        .iter()
-        .fold(0, |acc, d| acc + d.amount.amount.u128());
+    let total_staked = total_staked(deps.as_ref(), deps.api.addr_validate(&address)?)?;
 
     let metadata = Metadata {
         staked_amount: Uint128::from(total_staked),
