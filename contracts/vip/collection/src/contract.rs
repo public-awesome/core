@@ -49,6 +49,7 @@ pub fn execute_update_metadata(
     _staked_amount: Uint128,
     _data: Option<String>,
 ) -> Result<Response, ContractError> {
+    // TODO: only_owner...
     // TODO: get the nft based on the address (which is the token_id)
     // TODO: update metadata
 
