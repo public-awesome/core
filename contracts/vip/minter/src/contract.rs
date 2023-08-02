@@ -7,6 +7,7 @@ use stargaze_vip_collection::state::Metadata;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::state::COLLECTION;
 
 const CONTRACT_NAME: &str = "crates.io:stargaze-vip-minter";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -16,9 +17,11 @@ pub fn instantiate(
     deps: DepsMut,
     _env: Env,
     _info: MessageInfo,
-    _msg: InstantiateMsg,
+    msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+
+    COLLECTION.save(deps.storage, &deps.api.addr_validate(&msg.collection)?)?;
 
     Ok(Response::new())
 }
@@ -31,11 +34,13 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::Mint { address } => execute_mint(deps, env, address),
+        ExecuteMsg::Mint { name } => execute_mint(deps, env, name),
     }
 }
 
-pub fn execute_mint(deps: DepsMut, env: Env, address: String) -> Result<Response, ContractError> {
+pub fn execute_mint(deps: DepsMut, env: Env, name: String) -> Result<Response, ContractError> {
+    // TODO: query name to get associated address
+    let address = "address".to_string();
     let total_staked = total_staked(deps.as_ref(), deps.api.addr_validate(&address)?)?;
 
     let metadata = Metadata {
@@ -45,6 +50,21 @@ pub fn execute_mint(deps: DepsMut, env: Env, address: String) -> Result<Response
     };
 
     // TODO: get collection and mint token with metadata
+    let collection = COLLECTION.load(deps.storage)?;
+
+    // // Create mint msgs
+    // let mint_msg = Sg721ExecuteMsg::<Extension, Empty>::Mint {
+    //     token_id: increment_token_index(deps.storage)?.to_string(),
+    //     owner: info.sender.to_string(),
+    //     token_uri: Some(token_uri.clone()),
+    //     extension: None,
+    // };
+    // let msg = CosmosMsg::Wasm(WasmMsg::Execute {
+    //     contract_addr: collection_address.to_string(),
+    //     msg: to_binary(&mint_msg)?,
+    //     funds: vec![],
+    // });
+    // res = res.add_message(msg);
 
     // TODO: add the address to an end block queue
 

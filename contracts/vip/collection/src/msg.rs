@@ -3,10 +3,10 @@ use cosmwasm_std::Uint128;
 
 use crate::state::Metadata;
 
-#[cw_serde]
-pub struct InstantiateMsg {
-    pub owner: String,
-}
+// #[cw_serde]
+// pub struct InstantiateMsg {
+//     pub owner: String,
+// }
 
 #[cw_serde]
 pub enum ExecuteMsg {

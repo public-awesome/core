@@ -28,13 +28,15 @@ library = []
 
 [dependencies]
 cosmwasm-schema  = { workspace = true }
-cosmwasm-std     = { workspace = true }
+cosmwasm-std     = { workspace = true, features = ["cosmwasm_1_2"] }
 cosmwasm-storage = { workspace = true }
 cw-storage-plus  = { workspace = true }
 cw2              = { workspace = true }
+cw721-base       = { workspace = true, features = ["library"] }
 schemars         = { workspace = true }
 serde            = { workspace = true }
 thiserror        = { workspace = true }
+# stargaze-vip-minter = { path = "../minter", features = ["library"] }
 
 [dev-dependencies]
 cw-multi-test = { workspace = true }

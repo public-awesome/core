@@ -1,5 +1,5 @@
 [package]
-name        = "vip-minter"
+name        = "stargaze-vip-minter"
 authors     = ["Shane Vitarana <s+git@publicawesome.com>"]
 description = "Stargaze vNFT Minter"
 version     = { workspace = true }
@@ -32,6 +32,8 @@ cosmwasm-std            = { workspace = true, features = ["staking"] }
 cosmwasm-storage        = { workspace = true }
 cw-storage-plus         = { workspace = true }
 cw2                     = { workspace = true }
+cw721                   = { workspace = true }
+cw721-base              = { workspace = true }
 schemars                = { workspace = true }
 serde                   = { workspace = true }
 thiserror               = { workspace = true }

@@ -1,28 +1,48 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, Uint128,
+    instantiate2_address, to_binary, Addr, Binary, CodeInfoResponse, ContractInfoResponse, Deps,
+    DepsMut, Env, MessageInfo, Response, StdError, StdResult, Uint128,
 };
 use cw2::set_contract_version;
+use cw721_base::InstantiateMsg;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::msg::{ExecuteMsg, QueryMsg};
+use crate::VipCollection;
 
 const CONTRACT_NAME: &str = "crates.io:stargaze-vip-collection";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
-    deps: DepsMut,
-    _env: Env,
-    _info: MessageInfo,
+    mut deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
     msg: InstantiateMsg,
-) -> Result<Response, ContractError> {
+) -> StdResult<Response> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
-    deps.api.addr_validate(&msg.owner)?;
+    // create minter address with instantiate2
+    let contract_addr = env.contract.address.as_str();
 
-    Ok(Response::new())
+    let canonical_creator = deps.api.addr_canonicalize(contract_addr)?;
+    let ContractInfoResponse { code_id, .. } =
+        deps.querier.query_wasm_contract_info(contract_addr)?;
+    let CodeInfoResponse { checksum, .. } = deps.querier.query_wasm_code_info(code_id)?;
+    let salt = b"vip_minter1";
+
+    let canonical_addr = instantiate2_address(&checksum, &canonical_creator, salt)
+        .map_err(|_| StdError::generic_err("Could not calculate addr"))?;
+
+    let addr = deps.api.addr_humanize(&canonical_addr)?;
+
+    // TODO: query minter to see if it exists...
+
+    // TODO: instantiate minter with collection address
+
+    // instantiate collection
+    VipCollection::default().instantiate(deps.branch(), env, info, msg)
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
