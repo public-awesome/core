@@ -5,6 +5,7 @@ members = [
     "contracts/vip/collection",
     "contracts/vip/minter",
     "test/*",
+    "packages/sg-vip",
 ]
 resolver = "2"
 
@@ -34,6 +35,7 @@ thiserror          = "1.0.31"
 anyhow             = "1.0.41"
 sg-std             = { version = "3.1.0", path = "packages/sg-std" }
 sg-multi-test      = { version = "3.1.0", path = "packages/sg-multi-test" }
+sg-vip             = { path = "packages/sg-vip" }
 
 # dev-dependencies
 cw-multi-test  = "0.16.5"

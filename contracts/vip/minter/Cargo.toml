@@ -38,6 +38,7 @@ schemars                = { workspace = true }
 serde                   = { workspace = true }
 thiserror               = { workspace = true }
 stargaze-vip-collection = { path = "../collection", features = ["library"] }
+sg-vip                  = { workspace = true }
 
 [dev-dependencies]
 cw-multi-test = { workspace = true }

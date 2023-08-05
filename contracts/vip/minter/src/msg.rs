@@ -1,9 +1,9 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 
-#[cw_serde]
-pub struct InstantiateMsg {
-    pub collection: String,
-}
+// #[cw_serde]
+// pub struct InstantiateMsg {
+//     pub collection: String,
+// }
 
 #[cw_serde]
 pub enum ExecuteMsg {

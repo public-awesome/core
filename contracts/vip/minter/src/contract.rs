@@ -2,11 +2,12 @@
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, Uint128};
 use cw2::set_contract_version;
+use sg_vip::minter::InstantiateMsg;
 use stargaze_vip_collection::contract::total_staked;
 use stargaze_vip_collection::state::Metadata;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::msg::{ExecuteMsg, QueryMsg};
 use crate::state::COLLECTION;
 
 const CONTRACT_NAME: &str = "crates.io:stargaze-vip-minter";
