@@ -2,13 +2,12 @@
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
     instantiate2_address, to_binary, Addr, Binary, CodeInfoResponse, ContractInfoResponse, Deps,
-    DepsMut, Env, MessageInfo, Response, StdError, StdResult, Uint128,
+    DepsMut, Env, MessageInfo, Response, StdError, StdResult, Uint128, WasmMsg,
 };
 use cw2::set_contract_version;
-use cw721_base::InstantiateMsg;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, QueryMsg};
+use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::VipCollection;
 
 const CONTRACT_NAME: &str = "crates.io:stargaze-vip-collection";
@@ -23,26 +22,41 @@ pub fn instantiate(
 ) -> StdResult<Response> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
-    // create minter address with instantiate2
-    let contract_addr = env.contract.address.as_str();
-
-    let canonical_creator = deps.api.addr_canonicalize(contract_addr)?;
-    let ContractInfoResponse { code_id, .. } =
-        deps.querier.query_wasm_contract_info(contract_addr)?;
-    let CodeInfoResponse { checksum, .. } = deps.querier.query_wasm_code_info(code_id)?;
+    let collection = env.contract.address.as_str();
+    let canonical_creator = deps.api.addr_canonicalize(collection)?;
+    let CodeInfoResponse { checksum, .. } =
+        deps.querier.query_wasm_code_info(msg.minter_code_id)?;
     let salt = b"vip_minter1";
 
+    // create minter address with instantiate2
     let canonical_addr = instantiate2_address(&checksum, &canonical_creator, salt)
         .map_err(|_| StdError::generic_err("Could not calculate addr"))?;
+    let minter = deps.api.addr_humanize(&canonical_addr)?;
 
-    let addr = deps.api.addr_humanize(&canonical_addr)?;
+    let ContractInfoResponse { admin, .. } = deps.querier.query_wasm_contract_info(collection)?;
 
-    // TODO: query minter to see if it exists...
+    let minter_init_msg = WasmMsg::Instantiate2 {
+        admin,
+        code_id: msg.minter_code_id,
+        label: String::from("vip-minter"),
+        msg: to_binary(&sg_vip::minter::InstantiateMsg {
+            collection: collection.to_string(),
+        })?,
+        funds: vec![],
+        salt: Binary::from(salt.to_vec()),
+    };
 
-    // TODO: instantiate minter with collection address
+    let collection_init_msg = cw721_base::msg::InstantiateMsg {
+        name: String::from("Stargaze VIP Collection"),
+        symbol: String::from("SGVIP"),
+        minter: minter.to_string(),
+    };
 
-    // instantiate collection
-    VipCollection::default().instantiate(deps.branch(), env, info, msg)
+    VipCollection::default().instantiate(deps.branch(), env, info, collection_init_msg)?;
+
+    Ok(Response::new()
+        .add_message(minter_init_msg)
+        .add_attribute("vip-minter", minter))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
