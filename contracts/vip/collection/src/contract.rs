@@ -5,9 +5,10 @@ use cosmwasm_std::{
     DepsMut, Env, MessageInfo, Response, StdError, StdResult, Uint128, WasmMsg,
 };
 use cw2::set_contract_version;
+use sg_vip::collection::ExecuteMsg;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::msg::{InstantiateMsg, QueryMsg};
 use crate::VipCollection;
 
 const CONTRACT_NAME: &str = "crates.io:stargaze-vip-collection";
@@ -70,10 +71,10 @@ pub fn execute(
 ) -> Result<Response, ContractError> {
     match msg {
         ExecuteMsg::UpdateMetadata {
-            address,
+            name,
             staked_amount,
             data,
-        } => execute_update_metadata(deps, env, info, address, staked_amount, data),
+        } => execute_update_metadata(deps, env, info, name, staked_amount, data),
     }
 }
 
@@ -81,17 +82,24 @@ pub fn execute_update_metadata(
     deps: DepsMut,
     _env: Env,
     info: MessageInfo,
-    _address: String,
+    name: String,
     _staked_amount: Uint128,
     _data: Option<String>,
 ) -> Result<Response, ContractError> {
+    // make sure only the minter can call this
+    let minter = VipCollection::default()
+        .minter(deps.as_ref())?
+        .minter
+        .ok_or(ContractError::Unauthorized {})?;
+
     // TODO: only_owner...
-    // TODO: get the nft based on the address (which is the token_id)
+    // TODO: get the nft based on the name (which is the token_id)
     // TODO: update metadata
 
     Ok(Response::new())
 }
 
+// TODO: move this into the minter?
 pub fn total_staked(deps: Deps, address: Addr) -> StdResult<u128> {
     let total = deps
         .querier

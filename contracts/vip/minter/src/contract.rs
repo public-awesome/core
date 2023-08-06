@@ -61,17 +61,12 @@ pub fn execute_mint(
         name_collection,
     } = CONFIG.load(deps.storage)?;
 
-    // query name so we know the name is associated with an address
-    let associated_addr: Addr = deps.querier.query_wasm_smart(
-        name_collection,
-        &sg_name::SgNameQueryMsg::AssociatedAddress { name: name.clone() },
-    )?;
     ensure!(
-        info.sender == associated_addr,
+        info.sender == associated_address(deps.as_ref(), name.clone())?,
         ContractError::Unauthorized {}
     );
 
-    let total_staked = total_staked(deps.as_ref(), associated_addr)?;
+    let total_staked = total_staked(deps.as_ref(), info.sender.clone())?;
 
     let metadata = Metadata {
         staked_amount: Uint128::from(total_staked),
@@ -94,6 +89,38 @@ pub fn execute_mint(
     // TODO: add the address to an end block queue
 
     Ok(Response::new().add_message(mint_msg))
+}
+
+fn associated_address(deps: Deps, name: String) -> Result<Addr, ContractError> {
+    let associated_addr: Addr = deps.querier.query_wasm_smart(
+        CONFIG.load(deps.storage)?.name_collection,
+        &sg_name::SgNameQueryMsg::AssociatedAddress { name },
+    )?;
+
+    Ok(associated_addr)
+}
+
+pub fn execute_update(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    name: String,
+) -> Result<Response, ContractError> {
+    let Config {
+        vip_collection,
+        name_collection,
+    } = CONFIG.load(deps.storage)?;
+
+    ensure!(
+        info.sender == associated_address(deps.as_ref(), name)?,
+        ContractError::Unauthorized {}
+    );
+
+    let total_staked = total_staked(deps.as_ref(), info.sender)?;
+
+    // TODO: update metadata and call update on collection contract
+
+    Ok(Response::new())
 }
 
 // TODO: add end block function

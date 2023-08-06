@@ -9,15 +9,14 @@ pub struct InstantiateMsg {
     pub name_collection: String,
 }
 
-#[cw_serde]
-pub enum ExecuteMsg {
-    // TODO: move this to the minter?
-    UpdateMetadata {
-        address: String,
-        staked_amount: Uint128,
-        data: Option<String>,
-    },
-}
+// #[cw_serde]
+// pub enum ExecuteMsg {
+//     UpdateMetadata {
+//         name: String,
+//         staked_amount: Uint128,
+//         data: Option<String>,
+//     },
+// }
 
 #[cw_serde]
 #[derive(QueryResponses)]
