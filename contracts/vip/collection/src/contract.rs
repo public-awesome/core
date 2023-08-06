@@ -40,7 +40,8 @@ pub fn instantiate(
         code_id: msg.minter_code_id,
         label: String::from("vip-minter"),
         msg: to_binary(&sg_vip::minter::InstantiateMsg {
-            collection: collection.to_string(),
+            vip_collection: collection.to_string(),
+            name_collection: msg.name_collection,
         })?,
         funds: vec![],
         salt: Binary::from(salt.to_vec()),
@@ -52,6 +53,7 @@ pub fn instantiate(
         minter: minter.to_string(),
     };
 
+    // This configures the collection with the minter as the owner, the only one that can mint.
     VipCollection::default().instantiate(deps.branch(), env, info, collection_init_msg)?;
 
     Ok(Response::new()

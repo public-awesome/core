@@ -3,6 +3,7 @@ pub mod minter {
 
     #[cw_serde]
     pub struct InstantiateMsg {
-        pub collection: String,
+        pub vip_collection: String,
+        pub name_collection: String,
     }
 }

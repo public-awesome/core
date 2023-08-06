@@ -1,6 +1,9 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, Uint128};
+use cosmwasm_std::{
+    ensure, to_binary, Addr, Binary, Deps, DepsMut, Empty, Env, MessageInfo, Response, StdResult,
+    Uint128, WasmMsg,
+};
 use cw2::set_contract_version;
 use sg_vip::minter::InstantiateMsg;
 use stargaze_vip_collection::contract::total_staked;
@@ -8,7 +11,7 @@ use stargaze_vip_collection::state::Metadata;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, QueryMsg};
-use crate::state::COLLECTION;
+use crate::state::{Config, CONFIG};
 
 const CONTRACT_NAME: &str = "crates.io:stargaze-vip-minter";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -22,7 +25,13 @@ pub fn instantiate(
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
-    COLLECTION.save(deps.storage, &deps.api.addr_validate(&msg.collection)?)?;
+    CONFIG.save(
+        deps.storage,
+        &Config {
+            vip_collection: deps.api.addr_validate(&msg.vip_collection)?,
+            name_collection: deps.api.addr_validate(&msg.name_collection)?,
+        },
+    )?;
 
     Ok(Response::new())
 }
@@ -31,18 +40,38 @@ pub fn instantiate(
 pub fn execute(
     deps: DepsMut,
     env: Env,
-    _info: MessageInfo,
+    info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::Mint { name } => execute_mint(deps, env, name),
+        ExecuteMsg::Mint { name } => execute_mint(deps, env, info, name),
+        ExecuteMsg::Update { name } => todo!(),
+        ExecuteMsg::Pause {} => todo!(),
     }
 }
 
-pub fn execute_mint(deps: DepsMut, env: Env, name: String) -> Result<Response, ContractError> {
-    // TODO: query name to get associated address
-    let address = "address".to_string();
-    let total_staked = total_staked(deps.as_ref(), deps.api.addr_validate(&address)?)?;
+pub fn execute_mint(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    name: String,
+) -> Result<Response, ContractError> {
+    let Config {
+        vip_collection,
+        name_collection,
+    } = CONFIG.load(deps.storage)?;
+
+    // query name so we know the name is associated with an address
+    let associated_addr: Addr = deps.querier.query_wasm_smart(
+        name_collection,
+        &sg_name::SgNameQueryMsg::AssociatedAddress { name: name.clone() },
+    )?;
+    ensure!(
+        info.sender == associated_addr,
+        ContractError::Unauthorized {}
+    );
+
+    let total_staked = total_staked(deps.as_ref(), associated_addr)?;
 
     let metadata = Metadata {
         staked_amount: Uint128::from(total_staked),
@@ -50,26 +79,21 @@ pub fn execute_mint(deps: DepsMut, env: Env, name: String) -> Result<Response, C
         updated_at: env.block.time,
     };
 
-    // TODO: get collection and mint token with metadata
-    let collection = COLLECTION.load(deps.storage)?;
-
-    // // Create mint msgs
-    // let mint_msg = Sg721ExecuteMsg::<Extension, Empty>::Mint {
-    //     token_id: increment_token_index(deps.storage)?.to_string(),
-    //     owner: info.sender.to_string(),
-    //     token_uri: Some(token_uri.clone()),
-    //     extension: None,
-    // };
-    // let msg = CosmosMsg::Wasm(WasmMsg::Execute {
-    //     contract_addr: collection_address.to_string(),
-    //     msg: to_binary(&mint_msg)?,
-    //     funds: vec![],
-    // });
-    // res = res.add_message(msg);
+    let msg = cw721_base::ExecuteMsg::<Metadata, Empty>::Mint {
+        token_id: name,
+        owner: info.sender.to_string(),
+        token_uri: None,
+        extension: metadata,
+    };
+    let mint_msg = WasmMsg::Execute {
+        contract_addr: vip_collection.to_string(),
+        msg: to_binary(&msg)?,
+        funds: vec![],
+    };
 
     // TODO: add the address to an end block queue
 
-    Ok(Response::new())
+    Ok(Response::new().add_message(mint_msg))
 }
 
 // TODO: add end block function
