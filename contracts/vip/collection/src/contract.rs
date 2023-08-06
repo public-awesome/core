@@ -1,14 +1,15 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    instantiate2_address, to_binary, Addr, Binary, CodeInfoResponse, ContractInfoResponse, Deps,
-    DepsMut, Env, MessageInfo, Response, StdError, StdResult, Uint128, WasmMsg,
+    instantiate2_address, to_binary, Binary, CodeInfoResponse, ContractInfoResponse, Deps, DepsMut,
+    Env, MessageInfo, Response, StdError, StdResult, Uint128, WasmMsg,
 };
 use cw2::set_contract_version;
 use sg_vip::collection::ExecuteMsg;
 
 use crate::error::ContractError;
 use crate::msg::{InstantiateMsg, QueryMsg};
+use crate::state::Metadata;
 use crate::VipCollection;
 
 const CONTRACT_NAME: &str = "crates.io:stargaze-vip-collection";
@@ -48,6 +49,7 @@ pub fn instantiate(
         salt: Binary::from(salt.to_vec()),
     };
 
+    // TODO: `minter` may need to change to be this contract instead
     let collection_init_msg = cw721_base::msg::InstantiateMsg {
         name: String::from("Stargaze VIP Collection"),
         symbol: String::from("SGVIP"),
@@ -55,9 +57,10 @@ pub fn instantiate(
     };
 
     // This configures the collection with the minter as the owner, the only one that can mint.
-    VipCollection::default().instantiate(deps.branch(), env, info, collection_init_msg)?;
+    let res =
+        VipCollection::default().instantiate(deps.branch(), env, info, collection_init_msg)?;
 
-    Ok(Response::new()
+    Ok(res
         .add_message(minter_init_msg)
         .add_attribute("vip-minter", minter))
 }
@@ -70,44 +73,61 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::UpdateMetadata {
+        ExecuteMsg::Mint {
             name,
+            owner,
             staked_amount,
             data,
-        } => execute_update_metadata(deps, env, info, name, staked_amount, data),
+        } => execute_mint(deps, env, info, name, owner, staked_amount, data),
+        ExecuteMsg::UpdateToken {
+            name,
+            owner,
+            staked_amount,
+            data,
+        } => execute_update_token(deps, env, info, name, owner, staked_amount, data),
     }
 }
 
-pub fn execute_update_metadata(
+pub fn execute_mint(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     info: MessageInfo,
     name: String,
-    _staked_amount: Uint128,
-    _data: Option<String>,
+    owner: String,
+    staked_amount: Uint128,
+    data: Option<String>,
 ) -> Result<Response, ContractError> {
-    // make sure only the minter can call this
-    let minter = VipCollection::default()
-        .minter(deps.as_ref())?
-        .minter
-        .ok_or(ContractError::Unauthorized {})?;
+    only_minter(deps.as_ref())?;
 
-    // TODO: only_owner...
-    // TODO: get the nft based on the name (which is the token_id)
-    // TODO: update metadata
+    let extension = Metadata {
+        staked_amount,
+        data,
+        updated_at: env.block.time,
+    };
 
-    Ok(Response::new())
+    VipCollection::default()
+        .mint(deps, info, name, owner, None, extension)
+        .map_err(ContractError::Cw721Base)
 }
 
-// TODO: move this into the minter?
-pub fn total_staked(deps: Deps, address: Addr) -> StdResult<u128> {
-    let total = deps
-        .querier
-        .query_all_delegations(address)?
-        .iter()
-        .fold(0, |acc, d| acc + d.amount.amount.u128());
+pub fn execute_update_token(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    name: String,
+    owner: String,
+    staked_amount: Uint128,
+    data: Option<String>,
+) -> Result<Response, ContractError> {
+    // We can just overwrite the previous token with the new metadata
+    execute_mint(deps, env, info, name, owner, staked_amount, data)
+}
 
-    Ok(total)
+fn only_minter(deps: Deps) -> Result<String, ContractError> {
+    VipCollection::default()
+        .minter(deps)?
+        .minter
+        .ok_or(ContractError::Unauthorized {})
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

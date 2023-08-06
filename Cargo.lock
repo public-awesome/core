@@ -2146,7 +2146,6 @@ dependencies = [
  "serde",
  "sg-name",
  "sg-vip",
- "stargaze-vip-collection",
  "thiserror",
 ]
 

@@ -13,13 +13,6 @@ pub mod collection {
     use cosmwasm_std::Uint128;
 
     // #[cw_serde]
-    // pub struct Metadata {
-    //     pub staked_amount: Uint128,
-    //     pub data: Option<String>,
-    //     pub updated_at: Timestamp,
-    // }
-
-    // #[cw_serde]
     // pub struct InstantiateMsg {
     //     pub minter_code_id: u64,
     //     pub name_collection: String,
@@ -27,8 +20,15 @@ pub mod collection {
 
     #[cw_serde]
     pub enum ExecuteMsg {
-        UpdateMetadata {
+        Mint {
             name: String,
+            owner: String,
+            staked_amount: Uint128,
+            data: Option<String>,
+        },
+        UpdateToken {
+            name: String,
+            owner: String,
             staked_amount: Uint128,
             data: Option<String>,
         },

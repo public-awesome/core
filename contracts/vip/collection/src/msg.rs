@@ -9,15 +9,6 @@ pub struct InstantiateMsg {
     pub name_collection: String,
 }
 
-// #[cw_serde]
-// pub enum ExecuteMsg {
-//     UpdateMetadata {
-//         name: String,
-//         staked_amount: Uint128,
-//         data: Option<String>,
-//     },
-// }
-
 #[cw_serde]
 #[derive(QueryResponses)]
 pub enum QueryMsg {

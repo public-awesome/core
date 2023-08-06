@@ -6,6 +6,9 @@ pub enum ContractError {
     #[error("{0}")]
     Std(#[from] StdError),
 
+    #[error("{0}")]
+    Cw721Base(#[from] cw721_base::ContractError),
+
     #[error("Unauthorized")]
     Unauthorized {},
 }

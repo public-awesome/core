@@ -1,5 +1,9 @@
 # Stargaze VIP Program (SVP)
 
+TODO:
+
+- [ ] `program` contract to define tiers
+
 The Stargaze VIP Program is a program that rewards users for staking STARS in the form of reduced fees. The program is implemented as a set of NFT smart contracts. Users are assigned to a tier based on the amount of STARS they have staked. The tier determines the amount of fees they pay.
 
 A user mints a Stargaze VIP NFT (vNFT) to join the Stargaze VIP Program. It contains metadata that includes the amount of STARS they have staked that is periodically updated via end blocker. vNFTs are non-transferrable.

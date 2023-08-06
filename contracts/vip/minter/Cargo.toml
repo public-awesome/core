@@ -27,19 +27,18 @@ library = []
 
 
 [dependencies]
-cosmwasm-schema         = { workspace = true }
-cosmwasm-std            = { workspace = true, features = ["staking"] }
-cosmwasm-storage        = { workspace = true }
-cw-storage-plus         = { workspace = true }
-cw2                     = { workspace = true }
-cw721                   = { workspace = true }
-cw721-base              = { workspace = true }
-schemars                = { workspace = true }
-serde                   = { workspace = true }
-thiserror               = { workspace = true }
-stargaze-vip-collection = { path = "../collection", features = ["library"] }
-sg-vip                  = { workspace = true }
-sg-name                 = "1.2.5"
+cosmwasm-schema  = { workspace = true }
+cosmwasm-std     = { workspace = true, features = ["staking"] }
+cosmwasm-storage = { workspace = true }
+cw-storage-plus  = { workspace = true }
+cw2              = { workspace = true }
+cw721            = { workspace = true }
+cw721-base       = { workspace = true }
+schemars         = { workspace = true }
+serde            = { workspace = true }
+thiserror        = { workspace = true }
+sg-vip           = { workspace = true }
+sg-name          = "1.2.5"
 
 [dev-dependencies]
 cw-multi-test = { workspace = true }

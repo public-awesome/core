@@ -38,6 +38,5 @@ serde            = { workspace = true }
 thiserror        = { workspace = true }
 sg-vip           = { workspace = true }
 
-
 [dev-dependencies]
 cw-multi-test = { workspace = true }
