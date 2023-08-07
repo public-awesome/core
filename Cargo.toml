@@ -4,6 +4,7 @@ members = [
     "contracts/fair-burn",
     "contracts/vip/collection",
     "contracts/vip/minter",
+    "contracts/vip/program",
     "test/*",
     "packages/sg-vip",
 ]
