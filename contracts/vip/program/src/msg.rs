@@ -18,4 +18,7 @@ pub enum ExecuteMsg {}
 
 #[cw_serde]
 #[derive(QueryResponses)]
-pub enum QueryMsg {}
+pub enum QueryMsg {
+    #[returns(u16)]
+    Tier { name: String },
+}

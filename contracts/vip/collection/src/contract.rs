@@ -2,15 +2,14 @@
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
     instantiate2_address, to_binary, Binary, CodeInfoResponse, ContractInfoResponse, Deps, DepsMut,
-    Env, MessageInfo, Response, StdError, StdResult, Uint128, WasmMsg,
+    Env, MessageInfo, Response, StdError, StdResult, WasmMsg,
 };
 use cw2::set_contract_version;
-use sg_vip::collection::ExecuteMsg;
 
 use crate::error::ContractError;
-use crate::msg::{InstantiateMsg, QueryMsg};
+use crate::msg::{ExecuteExt, InstantiateMsg, QueryMsg};
 use crate::state::Metadata;
-use crate::VipCollection;
+use crate::{ExecuteMsg, VipCollection};
 
 const CONTRACT_NAME: &str = "crates.io:stargaze-vip-collection";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -73,54 +72,60 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::Mint {
-            name,
-            owner,
-            staked_amount,
-            data,
-        } => execute_mint(deps, env, info, name, owner, staked_amount, data),
-        ExecuteMsg::UpdateToken {
-            name,
-            owner,
-            staked_amount,
-            data,
-        } => execute_update_token(deps, env, info, name, owner, staked_amount, data),
+        cw721_base::ExecuteMsg::TransferNft {
+            recipient,
+            token_id,
+        } => Err(ContractError::Unauthorized {}),
+        cw721_base::ExecuteMsg::SendNft {
+            contract,
+            token_id,
+            msg,
+        } => Err(ContractError::Unauthorized {}),
+        cw721_base::ExecuteMsg::Approve {
+            spender,
+            token_id,
+            expires,
+        } => Err(ContractError::Unauthorized {}),
+        cw721_base::ExecuteMsg::Revoke { spender, token_id } => Err(ContractError::Unauthorized {}),
+        cw721_base::ExecuteMsg::ApproveAll { operator, expires } => {
+            Err(ContractError::Unauthorized {})
+        }
+        cw721_base::ExecuteMsg::RevokeAll { operator } => Err(ContractError::Unauthorized {}),
+        // cw721_base::ExecuteMsg::Mint {
+        //     token_id,
+        //     owner,
+        //     token_uri,
+        //     extension,
+        // } => todo!(),
+        // cw721_base::ExecuteMsg::Burn { token_id } => todo!(),
+        cw721_base::ExecuteMsg::Extension { msg } => match msg {
+            ExecuteExt::UpdateToken {
+                token_id,
+                owner,
+                token_uri,
+                extension,
+            } => todo!(),
+        },
+        // cw721_base::ExecuteMsg::UpdateOwnership(_) => todo!(),
+        _ => VipCollection::default()
+            .execute(deps, env, info, msg)
+            .map_err(Into::into),
     }
-}
-
-pub fn execute_mint(
-    deps: DepsMut,
-    env: Env,
-    info: MessageInfo,
-    name: String,
-    owner: String,
-    staked_amount: Uint128,
-    data: Option<String>,
-) -> Result<Response, ContractError> {
-    only_minter(deps.as_ref())?;
-
-    let extension = Metadata {
-        staked_amount,
-        data,
-        updated_at: env.block.time,
-    };
-
-    VipCollection::default()
-        .mint(deps, info, name, owner, None, extension)
-        .map_err(ContractError::Cw721Base)
 }
 
 pub fn execute_update_token(
     deps: DepsMut,
-    env: Env,
     info: MessageInfo,
-    name: String,
+    token_id: String,
     owner: String,
-    staked_amount: Uint128,
-    data: Option<String>,
+    extension: Metadata,
 ) -> Result<Response, ContractError> {
+    only_minter(deps.as_ref())?;
+
     // We can just overwrite the previous token with the new metadata
-    execute_mint(deps, env, info, name, owner, staked_amount, data)
+    VipCollection::default()
+        .mint(deps, info, token_id, owner, None, extension)
+        .map_err(ContractError::Cw721Base)
 }
 
 fn only_minter(deps: Deps) -> Result<String, ContractError> {
@@ -153,6 +158,16 @@ pub fn query_total_staked(deps: Deps, owner: String) -> StdResult<Binary> {
 
     todo!()
 }
+
+// pub fn query_stake_weight(deps: Deps, env: Env, name: String) -> StdResult<Uint128> {
+//     let res: NftInfoResponse<Metadata> = VipCollection::default().query(
+//         deps,
+//         env,
+//         cw721_base::msg::QueryMsg::NftInfo { token_id: name },
+//     );
+
+//     res.extension.staked_amount
+// }
 
 #[cfg(test)]
 mod tests {}

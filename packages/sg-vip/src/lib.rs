@@ -18,21 +18,21 @@ pub mod collection {
     //     pub name_collection: String,
     // }
 
-    #[cw_serde]
-    pub enum ExecuteMsg {
-        Mint {
-            name: String,
-            owner: String,
-            staked_amount: Uint128,
-            data: Option<String>,
-        },
-        UpdateToken {
-            name: String,
-            owner: String,
-            staked_amount: Uint128,
-            data: Option<String>,
-        },
-    }
+    // #[cw_serde]
+    // pub enum ExecuteMsg {
+    //     Mint {
+    //         name: String,
+    //         owner: String,
+    //         staked_amount: Uint128,
+    //         data: Option<String>,
+    //     },
+    //     UpdateToken {
+    //         name: String,
+    //         owner: String,
+    //         staked_amount: Uint128,
+    //         data: Option<String>,
+    //     },
+    // }
 
     // #[cw_serde]
     // #[derive(QueryResponses)]

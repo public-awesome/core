@@ -1,3 +1,5 @@
+use std::env;
+
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
@@ -50,7 +52,7 @@ pub fn execute(
 
 pub fn execute_mint(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     info: MessageInfo,
     name: String,
 ) -> Result<Response, ContractError> {
@@ -66,11 +68,15 @@ pub fn execute_mint(
 
     let staked_amount = total_staked(deps.as_ref(), info.sender.clone())?;
 
-    let msg = sg_vip::collection::ExecuteMsg::Mint {
-        name,
+    let msg = stargaze_vip_collection::ExecuteMsg::Mint {
+        token_id: name,
         owner: info.sender.to_string(),
-        staked_amount: Uint128::from(staked_amount),
-        data: None,
+        token_uri: None,
+        extension: stargaze_vip_collection::state::Metadata {
+            staked_amount: Uint128::from(staked_amount),
+            data: None,
+            updated_at: env.block.time,
+        },
     };
     let mint_msg = WasmMsg::Execute {
         contract_addr: vip_collection.to_string(),
@@ -94,24 +100,8 @@ pub fn execute_update(
         name_collection,
     } = CONFIG.load(deps.storage)?;
 
-    ensure!(
-        info.sender == associated_address(deps.as_ref(), name.clone())?,
-        ContractError::Unauthorized {}
-    );
-
-    let staked_amount = total_staked(deps.as_ref(), info.sender.clone())?;
-
-    let msg = sg_vip::collection::ExecuteMsg::Mint {
-        name,
-        owner: info.sender.to_string(),
-        staked_amount: Uint128::from(staked_amount),
-        data: None,
-    };
-    let mint_msg = WasmMsg::Execute {
-        contract_addr: vip_collection.to_string(),
-        msg: to_binary(&msg)?,
-        funds: vec![],
-    };
+    // TODO: except don't add to queue again?
+    execute_mint(deps, env, info, name)?;
 
     // TODO: update metadata and call update on collection contract
 
