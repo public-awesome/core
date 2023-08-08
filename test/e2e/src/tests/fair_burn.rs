@@ -29,6 +29,6 @@ fn test_fair_burn(chain: &mut Chain) {
         .orc
         .execute_batch("fair-burn", reqs, &master_account.key);
 
-    println!("exec_response: {:?}", exec_response);
+    println!("exec_response: {exec_response:?}");
     assert!(exec_response.is_ok());
 }

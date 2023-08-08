@@ -12,7 +12,7 @@ pub fn instantiate_fair_burn(
 ) -> Result<InstantiateResponse, ProcessError> {
     orc.instantiate(
         NAME_FAIR_BURN,
-        &format!("{}_inst", NAME_FAIR_BURN,),
+        &format!("{NAME_FAIR_BURN}_inst",),
         &FairBurnInstantiateMsg { fee_bps: 5000 },
         &user.key,
         Some(user.account.address.parse().unwrap()),

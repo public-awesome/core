@@ -132,7 +132,7 @@ pub fn execute_fair_burn(
             k if k == fair_burn_pool_key => {
                 let mut event = Event::new("fund-fair-burn-pool");
                 for (idx, c) in funds.iter().enumerate() {
-                    event = event.add_attribute(format!("coin_{0}", idx), c.to_string());
+                    event = event.add_attribute(format!("coin_{idx}"), c.to_string());
                 }
                 response = response
                     .add_event(event)
@@ -214,7 +214,7 @@ mod tests {
         app.sudo(CwSudoMsg::Bank({
             BankSudo::Mint {
                 to_address: addr.to_string(),
-                amount: balances.clone(),
+                amount: balances,
             }
         }))
         .unwrap();
@@ -263,7 +263,7 @@ mod tests {
         let creator = Addr::unchecked("creator");
 
         let fee_bps = 5000;
-        let init_msg = InstantiateMsg { fee_bps: fee_bps };
+        let init_msg = InstantiateMsg { fee_bps };
         let fair_burn = app
             .instantiate_contract(fair_burn_id, creator, &init_msg, &[], "FairBurn", None)
             .unwrap();
@@ -322,7 +322,7 @@ mod tests {
             burner.clone(),
             fair_burn.clone(),
             &ExecuteMsg::FairBurn { recipient: None },
-            &vec![],
+            &[],
         );
         assert!(response.is_err());
 
@@ -331,7 +331,7 @@ mod tests {
             burner.clone(),
             fair_burn.clone(),
             &ExecuteMsg::FairBurn { recipient: None },
-            &vec![coin(0, NATIVE_DENOM)],
+            &[coin(0, NATIVE_DENOM)],
         );
         assert!(response.is_err());
 
@@ -341,7 +341,7 @@ mod tests {
                 burner.clone(),
                 fair_burn.clone(),
                 &ExecuteMsg::FairBurn { recipient: None },
-                &vec![coin(1, NATIVE_DENOM)],
+                &[coin(1, NATIVE_DENOM)],
             )
             .unwrap();
         let event = find_event(&response, "wasm-fair-burn").unwrap();
@@ -354,13 +354,13 @@ mod tests {
                 burner.clone(),
                 fair_burn.clone(),
                 &ExecuteMsg::FairBurn { recipient: None },
-                &vec![coin(1, NATIVE_DENOM), coin(1, NATIVE_DENOM)],
+                &[coin(1, NATIVE_DENOM), coin(1, NATIVE_DENOM)],
             )
             .unwrap();
         let event = find_event(&response, "wasm-fair-burn").unwrap();
         let burn_amount = find_attribute(event, "burn_amount").unwrap();
         assert_eq!(burn_amount, "1");
-        println!("{:?}", response);
+        println!("{response:?}");
 
         // Fees are calculated correctly
         let response = app
@@ -368,7 +368,7 @@ mod tests {
                 burner.clone(),
                 fair_burn.clone(),
                 &ExecuteMsg::FairBurn { recipient: None },
-                &vec![coin(11, NATIVE_DENOM)],
+                &[coin(11, NATIVE_DENOM)],
             )
             .unwrap();
         let event = find_event(&response, "wasm-fair-burn").unwrap();
@@ -383,7 +383,7 @@ mod tests {
                 burner.clone(),
                 fair_burn.clone(),
                 &ExecuteMsg::FairBurn { recipient: None },
-                &vec![coin(11, NATIVE_DENOM), coin(11, alt_denom)],
+                &[coin(11, NATIVE_DENOM), coin(11, alt_denom)],
             )
             .unwrap();
         let event = find_event(&response, "wasm-fair-burn").unwrap();
@@ -393,7 +393,7 @@ mod tests {
         assert_eq!(dist_amount, "5");
         let event = find_event(&response, "wasm-fund-fair-burn-pool").unwrap();
         let fair_burn_coin = find_attribute(event, "coin_0").unwrap();
-        assert_eq!(fair_burn_coin, format!("11{0}", alt_denom));
+        assert_eq!(fair_burn_coin, format!("11{alt_denom}"));
 
         // Can handle recipient address on native denom
         let response = app
@@ -403,7 +403,7 @@ mod tests {
                 &ExecuteMsg::FairBurn {
                     recipient: Some(recipient.to_string()),
                 },
-                &vec![coin(11, NATIVE_DENOM)],
+                &[coin(11, NATIVE_DENOM)],
             )
             .unwrap();
         let event = find_event(&response, "wasm-fair-burn").unwrap();
@@ -413,26 +413,26 @@ mod tests {
         let recipient_address = find_attribute(event, "recipient").unwrap();
         assert_eq!(recipient_address, recipient.to_string());
         let recipient_coin = find_attribute(event, "amount").unwrap();
-        assert_eq!(recipient_coin, format!("5{0}", NATIVE_DENOM));
+        assert_eq!(recipient_coin, format!("5{NATIVE_DENOM}"));
 
         // Can handle recipient address on alt denom
         let response = app
             .execute_contract(
                 burner.clone(),
-                fair_burn.clone(),
+                fair_burn,
                 &ExecuteMsg::FairBurn {
                     recipient: Some(recipient.to_string()),
                 },
-                &vec![coin(11, alt_denom)],
+                &[coin(11, alt_denom)],
             )
             .unwrap();
         let event = find_event(&response, "wasm-fund-fair-burn-pool").unwrap();
         let fund_pool_coin = find_attribute(event, "coin_0").unwrap();
-        assert_eq!(fund_pool_coin, format!("6{0}", alt_denom));
+        assert_eq!(fund_pool_coin, format!("6{alt_denom}"));
         let event = find_event(&response, "transfer").unwrap();
         let recipient_address = find_attribute(event, "recipient").unwrap();
         assert_eq!(recipient_address, recipient.to_string());
         let recipient_coin = find_attribute(event, "amount").unwrap();
-        assert_eq!(recipient_coin, format!("5{0}", alt_denom));
+        assert_eq!(recipient_coin, format!("5{alt_denom}"));
     }
 }
