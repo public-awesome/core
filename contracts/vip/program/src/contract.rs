@@ -1,7 +1,8 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{coin, to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 use cw2::set_contract_version;
+use stargaze_vip_collection::state::Metadata;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
@@ -45,8 +46,11 @@ pub fn execute(
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::Tier { name } => {
-            let collection = COLLECTION.load(deps.storage)?;
-            // TODO: query metadata for name
+            let token_info: cw721::NftInfoResponse<Metadata> = deps.querier.query_wasm_smart(
+                COLLECTION.load(deps.storage)?,
+                &cw721::Cw721QueryMsg::NftInfo { token_id: name },
+            )?;
+            let staked_amount = token_info.extension.staked_amount.u128();
 
             // TODO: compare stake weight with tier limits
 

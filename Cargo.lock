@@ -1573,21 +1573,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "program"
-version = "0.1.0"
-dependencies = [
- "cosmwasm-schema",
- "cosmwasm-std",
- "cosmwasm-storage",
- "cw-multi-test",
- "cw-storage-plus 1.1.0",
- "cw2 1.1.0",
- "schemars",
- "serde",
- "thiserror",
-]
-
-[[package]]
 name = "prost"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2148,6 +2133,26 @@ dependencies = [
 
 [[package]]
 name = "stargaze-vip-minter"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cosmwasm-storage",
+ "cw-multi-test",
+ "cw-storage-plus 1.1.0",
+ "cw2 1.1.0",
+ "cw721 0.18.0",
+ "cw721-base 0.18.0",
+ "schemars",
+ "serde",
+ "sg-name",
+ "sg-vip",
+ "stargaze-vip-collection",
+ "thiserror",
+]
+
+[[package]]
+name = "stargaze-vip-program"
 version = "0.1.0"
 dependencies = [
  "cosmwasm-schema",

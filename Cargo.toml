@@ -27,7 +27,7 @@ cw-storage-plus    = "1.1.0"
 cw-controllers     = "1.1.0"
 cw2                = "1.1.0"
 cw721              = "0.18.0"
-cw721-base         = "0.18.0"
+cw721-base         = { version = "0.18.0", feature = ["library"] }
 cw-utils           = "1.0.1"
 schemars           = "0.8.11"
 semver             = "1.0.16"

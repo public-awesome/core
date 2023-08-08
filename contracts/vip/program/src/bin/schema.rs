@@ -1,6 +1,6 @@
 use cosmwasm_schema::write_api;
 
-use program::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use stargaze_vip_program::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 
 fn main() {
     write_api! {
