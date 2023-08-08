@@ -1838,7 +1838,7 @@ dependencies = [
 
 [[package]]
 name = "sg-multi-test"
-version = "2.3.0"
+version = "3.1.0"
 dependencies = [
  "anyhow",
  "cosmwasm-std",
@@ -1850,7 +1850,7 @@ dependencies = [
 
 [[package]]
 name = "sg-std"
-version = "2.3.0"
+version = "3.1.0"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
