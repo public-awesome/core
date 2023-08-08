@@ -25,9 +25,7 @@ pub fn instantiate(
 
     COLLECTION.save(deps.storage, &deps.api.addr_validate(&msg.collection)?)?;
 
-    for t in msg.tiers.iter() {
-        TIERS.save(deps.storage, t.tier, &t.amount)?;
-    }
+    TIERS.save(deps.storage, &msg.tiers)?;
 
     Ok(Response::new())
 }
@@ -50,12 +48,15 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
                 COLLECTION.load(deps.storage)?,
                 &cw721::Cw721QueryMsg::NftInfo { token_id: name },
             )?;
-            let staked_amount = token_info.extension.staked_amount.u128();
+            let staked_amount = token_info.extension.staked_amount;
 
-            // TODO: compare stake weight with tier limits
+            let tiers = TIERS.load(deps.storage)?;
+            let index = tiers
+                .iter()
+                .position(|&x| x >= staked_amount)
+                .unwrap_or(tiers.len());
 
-            let tier = TIERS.load(deps.storage, 1)?;
-            Ok(to_binary(&tier)?)
+            Ok(to_binary(&index)?)
         }
     }
 }

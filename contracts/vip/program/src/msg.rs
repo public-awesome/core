@@ -1,16 +1,10 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::Coin;
-
-#[cw_serde]
-pub struct TierMsg {
-    pub tier: u16,
-    pub amount: Vec<Coin>,
-}
+use cosmwasm_std::Uint128;
 
 #[cw_serde]
 pub struct InstantiateMsg {
     pub collection: String,
-    pub tiers: Vec<TierMsg>,
+    pub tiers: Vec<Uint128>,
 }
 
 #[cw_serde]
@@ -19,6 +13,6 @@ pub enum ExecuteMsg {}
 #[cw_serde]
 #[derive(QueryResponses)]
 pub enum QueryMsg {
-    #[returns(u16)]
+    #[returns(u64)]
     Tier { name: String },
 }
