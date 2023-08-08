@@ -1,6 +1,6 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{coin, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+use cosmwasm_std::{coin, to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
@@ -43,15 +43,17 @@ pub fn execute(
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
-    // match msg {
-    //     QueryMsg::Tier { name } => {
-    //         let collection = COLLECTION.load(deps.storage)?;
+    match msg {
+        QueryMsg::Tier { name } => {
+            let collection = COLLECTION.load(deps.storage)?;
+            // TODO: query metadata for name
 
-    //         let tier = TIERS.load(deps.storage, 1)?;
-    //         Ok(tier.into())
-    //     }
-    // }
-    unimplemented!()
+            // TODO: compare stake weight with tier limits
+
+            let tier = TIERS.load(deps.storage, 1)?;
+            Ok(to_binary(&tier)?)
+        }
+    }
 }
 
 #[cfg(test)]

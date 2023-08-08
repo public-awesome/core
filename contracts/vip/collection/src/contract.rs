@@ -7,8 +7,7 @@ use cosmwasm_std::{
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteExt, InstantiateMsg, QueryMsg};
-use crate::state::Metadata;
+use crate::msg::{InstantiateMsg, QueryMsg};
 use crate::{ExecuteMsg, VipCollection};
 
 const CONTRACT_NAME: &str = "crates.io:stargaze-vip-collection";
@@ -98,41 +97,12 @@ pub fn execute(
         //     extension,
         // } => todo!(),
         // cw721_base::ExecuteMsg::Burn { token_id } => todo!(),
-        cw721_base::ExecuteMsg::Extension { msg } => match msg {
-            ExecuteExt::UpdateToken {
-                token_id,
-                owner,
-                token_uri,
-                extension,
-            } => todo!(),
-        },
+        // cw721_base::ExecuteMsg::Extension { msg } => todo!(),
         // cw721_base::ExecuteMsg::UpdateOwnership(_) => todo!(),
         _ => VipCollection::default()
             .execute(deps, env, info, msg)
             .map_err(Into::into),
     }
-}
-
-pub fn execute_update_token(
-    deps: DepsMut,
-    info: MessageInfo,
-    token_id: String,
-    owner: String,
-    extension: Metadata,
-) -> Result<Response, ContractError> {
-    only_minter(deps.as_ref())?;
-
-    // We can just overwrite the previous token with the new metadata
-    VipCollection::default()
-        .mint(deps, info, token_id, owner, None, extension)
-        .map_err(ContractError::Cw721Base)
-}
-
-fn only_minter(deps: Deps) -> Result<String, ContractError> {
-    VipCollection::default()
-        .minter(deps)?
-        .minter
-        .ok_or(ContractError::Unauthorized {})
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

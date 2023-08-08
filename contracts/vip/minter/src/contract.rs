@@ -45,7 +45,7 @@ pub fn execute(
 ) -> Result<Response, ContractError> {
     match msg {
         ExecuteMsg::Mint { name } => execute_mint(deps, env, info, name),
-        ExecuteMsg::Update { name } => todo!(),
+        ExecuteMsg::Update { name } => execute_update(deps, env, info, name),
         ExecuteMsg::Pause {} => todo!(),
     }
 }
