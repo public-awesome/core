@@ -46,3 +46,7 @@ e2e-test-arm: deploy-local-arm
 # e2e-test-full: dl-artifacts optimize e2e-test
 
 # e2e-test-full-arm: dl-artifacts optimize-arm e2e-test-arm
+
+publish:
+	cd packages/sg-std && cargo publish && cd ../..
+	cd packages/sg-multi-test && cargo publish && cd ../..

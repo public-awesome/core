@@ -1,0 +1,17 @@
+[package]
+name        = "sg-multi-test"
+authors     = ["Jorge Hernandez <jorge@publicawesome.com>"]
+description = "Integration test helpers for Stargaze custom contracts"
+version     = "3.1.0"
+edition     = { workspace = true }
+homepage    = { workspace = true }
+repository  = { workspace = true }
+license     = { workspace = true }
+
+[dependencies]
+anyhow        = "1"
+cosmwasm-std  = { workspace = true }
+cw-multi-test = { workspace = true }
+schemars      = { workspace = true }
+serde         = { workspace = true }
+sg-std        = { workspace = true }
