@@ -1,0 +1,96 @@
+{
+  "contract_name": "stargaze-vip-minter",
+  "contract_version": "0.1.0",
+  "idl_version": "1.0.0",
+  "instantiate": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "InstantiateMsg",
+    "type": "object",
+    "required": [
+      "name_collection",
+      "vip_collection"
+    ],
+    "properties": {
+      "name_collection": {
+        "type": "string"
+      },
+      "vip_collection": {
+        "type": "string"
+      }
+    },
+    "additionalProperties": false
+  },
+  "execute": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "ExecuteMsg",
+    "oneOf": [
+      {
+        "description": "Mint a loyalty token for the given name",
+        "type": "object",
+        "required": [
+          "mint"
+        ],
+        "properties": {
+          "mint": {
+            "type": "object",
+            "required": [
+              "name"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "description": "Update the stake amount for the given name",
+        "type": "object",
+        "required": [
+          "update"
+        ],
+        "properties": {
+          "update": {
+            "type": "object",
+            "required": [
+              "name"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "description": "So we can pause before migrating names, etc.",
+        "type": "object",
+        "required": [
+          "pause"
+        ],
+        "properties": {
+          "pause": {
+            "type": "object",
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    ]
+  },
+  "query": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "QueryMsg",
+    "type": "string",
+    "enum": []
+  },
+  "migrate": null,
+  "sudo": null,
+  "responses": {}
+}
