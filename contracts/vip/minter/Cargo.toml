@@ -42,7 +42,6 @@ cw721-base              = { workspace = true }
 schemars                = { workspace = true }
 serde                   = { workspace = true }
 thiserror               = { workspace = true }
-sg-vip                  = { workspace = true }
 sg-name                 = "1.2.5"
 stargaze-vip-collection = { path = "../collection", features = ["library"] }
 

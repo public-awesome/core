@@ -1,6 +1,13 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 
 #[cw_serde]
+pub struct InstantiateMsg {
+    pub collection_code_id: u64,
+    pub name_collection: String,
+    pub update_interval: u64, // in blocks
+}
+
+#[cw_serde]
 pub enum ExecuteMsg {
     /// Mint a loyalty token for the given name
     Mint { name: String },

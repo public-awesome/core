@@ -2075,15 +2075,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sg-vip"
-version = "0.1.0"
-dependencies = [
- "cosmwasm-schema",
- "cosmwasm-std",
- "serde",
-]
-
-[[package]]
 name = "sha1"
 version = "0.10.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2205,7 +2196,6 @@ dependencies = [
  "cw721-base 0.18.0",
  "schemars",
  "serde",
- "sg-vip",
  "thiserror",
 ]
 
@@ -2224,7 +2214,6 @@ dependencies = [
  "schemars",
  "serde",
  "sg-name",
- "sg-vip",
  "stargaze-vip-collection",
  "thiserror",
 ]
@@ -2244,7 +2233,6 @@ dependencies = [
  "schemars",
  "serde",
  "sg-name",
- "sg-vip",
  "stargaze-vip-collection",
  "thiserror",
 ]
