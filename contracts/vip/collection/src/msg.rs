@@ -7,6 +7,7 @@ use crate::state::Metadata;
 pub struct InstantiateMsg {
     pub minter_code_id: u64,
     pub name_collection: String,
+    pub update_interval: u64, // in blocks
 }
 
 #[cw_serde]

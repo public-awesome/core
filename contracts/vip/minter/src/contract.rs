@@ -3,15 +3,15 @@ use std::env;
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    ensure, to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, Uint128,
-    WasmMsg,
+    ensure, to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
+    Timestamp, Uint128, WasmMsg,
 };
 use cw2::set_contract_version;
 use sg_vip::minter::InstantiateMsg;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, QueryMsg};
-use crate::state::{Config, CONFIG};
+use crate::state::{Config, CONFIG, NAME_QUEUE};
 
 const CONTRACT_NAME: &str = "crates.io:stargaze-vip-minter";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -30,6 +30,7 @@ pub fn instantiate(
         &Config {
             vip_collection: deps.api.addr_validate(&msg.vip_collection)?,
             name_collection: deps.api.addr_validate(&msg.name_collection)?,
+            update_interval: msg.update_interval,
         },
     )?;
 
@@ -56,35 +57,34 @@ pub fn execute_mint(
     info: MessageInfo,
     name: String,
 ) -> Result<Response, ContractError> {
-    let Config {
-        vip_collection,
-        name_collection,
-    } = CONFIG.load(deps.storage)?;
-
     ensure!(
         info.sender == associated_address(deps.as_ref(), name.clone())?,
         ContractError::Unauthorized {}
     );
 
-    let staked_amount = total_staked(deps.as_ref(), info.sender.clone())?;
+    let Config {
+        vip_collection,
+        update_interval,
+        ..
+    } = CONFIG.load(deps.storage)?;
 
-    let msg = stargaze_vip_collection::ExecuteMsg::Mint {
-        token_id: name,
-        owner: info.sender.to_string(),
-        token_uri: None,
-        extension: stargaze_vip_collection::state::Metadata {
-            staked_amount: Uint128::from(staked_amount),
-            data: None,
-            updated_at: env.block.time,
+    let mint_msg = mint(
+        deps.as_ref(),
+        info.sender,
+        env.block.time,
+        name.clone(),
+        vip_collection,
+    )?;
+
+    NAME_QUEUE.update(
+        deps.storage,
+        env.block.height + update_interval,
+        |names| -> StdResult<_> {
+            let mut names = names.unwrap_or_default();
+            names.push(name);
+            Ok(names)
         },
-    };
-    let mint_msg = WasmMsg::Execute {
-        contract_addr: vip_collection.to_string(),
-        msg: to_binary(&msg)?,
-        funds: vec![],
-    };
-
-    // TODO: add the `token_id` to an end block queue
+    )?;
 
     Ok(Response::new().add_message(mint_msg))
 }
@@ -95,20 +95,52 @@ pub fn execute_update(
     info: MessageInfo,
     name: String,
 ) -> Result<Response, ContractError> {
-    let Config {
+    ensure!(
+        info.sender == associated_address(deps.as_ref(), name.clone())?,
+        ContractError::Unauthorized {}
+    );
+
+    let Config { vip_collection, .. } = CONFIG.load(deps.storage)?;
+
+    let mint_msg = mint(
+        deps.as_ref(),
+        info.sender,
+        env.block.time,
+        name,
         vip_collection,
-        name_collection,
-    } = CONFIG.load(deps.storage)?;
+    )?;
 
-    // TODO: except don't add to queue again?
-    execute_mint(deps, env, info, name)?;
-
-    // TODO: update metadata and call update on collection contract
-
-    Ok(Response::new())
+    Ok(Response::new().add_message(mint_msg))
 }
 
-fn associated_address(deps: Deps, name: String) -> Result<Addr, ContractError> {
+pub fn mint(
+    deps: Deps,
+    sender: Addr,
+    block_time: Timestamp,
+    name: String,
+    vip_collection: Addr,
+) -> Result<WasmMsg, ContractError> {
+    let staked_amount = total_staked(deps, sender.clone())?;
+
+    let msg = stargaze_vip_collection::ExecuteMsg::Mint {
+        token_id: name,
+        owner: sender.to_string(),
+        token_uri: None,
+        extension: stargaze_vip_collection::state::Metadata {
+            staked_amount: Uint128::from(staked_amount),
+            data: None,
+            updated_at: block_time,
+        },
+    };
+
+    Ok(WasmMsg::Execute {
+        contract_addr: vip_collection.to_string(),
+        msg: to_binary(&msg)?,
+        funds: vec![],
+    })
+}
+
+pub fn associated_address(deps: Deps, name: String) -> Result<Addr, ContractError> {
     let associated_addr: Addr = deps.querier.query_wasm_smart(
         CONFIG.load(deps.storage)?.name_collection,
         &sg_name::SgNameQueryMsg::AssociatedAddress { name },
@@ -126,9 +158,6 @@ fn total_staked(deps: Deps, address: Addr) -> StdResult<u128> {
 
     Ok(total)
 }
-
-// TODO: add end block function
-// TODO: pop address off the queue and update metadata
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(_deps: Deps, _env: Env, _msg: QueryMsg) -> StdResult<Binary> {

@@ -42,6 +42,7 @@ pub fn instantiate(
         msg: to_binary(&sg_vip::minter::InstantiateMsg {
             vip_collection: collection.to_string(),
             name_collection: msg.name_collection,
+            update_interval: msg.update_interval,
         })?,
         funds: vec![],
         salt: Binary::from(salt.to_vec()),
