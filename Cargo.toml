@@ -6,7 +6,6 @@ members = [
     "contracts/vip/minter",
     "contracts/vip/program",
     "test/*",
-    "packages/sg-vip",
 ]
 resolver = "2"
 
