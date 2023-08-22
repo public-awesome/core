@@ -11,7 +11,7 @@ use stargaze_royalty_registry::{
 fn try_sudo_update_config() {
     let vt = standard_minter_template(1);
     let (mut router, creator, _bidder) = (vt.router, vt.accts.creator, vt.accts.bidder);
-    let royalty_registry = setup_royalty_registry(&mut router, creator.clone());
+    let royalty_registry = setup_royalty_registry(&mut router, creator);
 
     let new_config = Config {
         update_wait_period: 10,
