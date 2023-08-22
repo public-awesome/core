@@ -19,3 +19,4 @@ pub mod sudo;
 
 pub use crate::error::ContractError;
 pub use crate::helpers::fetch_or_set_royalties;
+pub use crate::helpers::fetch_royalty_entry;

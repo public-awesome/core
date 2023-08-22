@@ -1,6 +1,6 @@
 [package]
 name          = "stargaze-royalty-registry"
-version       = "0.2.0"
+version       = "0.3.0"
 authors       = ["Tasio Victoria <tasiovictoria@ujulabs.com>"]
 description   = "Stargaze Royalty Registry"
 documentation = "https://docs.rs/stargaze-royalty-registry"
