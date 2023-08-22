@@ -12,5 +12,6 @@ coverage:
       default:
         enabled: no
 ignore:
-  - "contracts/loyalty/.*"
+  - "packages/sg-std/.*"
+  - "packages/sg-multi-test/.*"
   - "unit-tests"
