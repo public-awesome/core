@@ -360,7 +360,6 @@ mod tests {
         let event = find_event(&response, "wasm-fair-burn").unwrap();
         let burn_amount = find_attribute(event, "burn_amount").unwrap();
         assert_eq!(burn_amount, "1");
-        println!("{response:?}");
 
         // Fees are calculated correctly
         let response = app

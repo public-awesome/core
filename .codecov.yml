@@ -13,4 +13,4 @@ coverage:
         enabled: no
 ignore:
   - "contracts/loyalty/.*"
-  - "test/.*"
+  - "unit-tests"

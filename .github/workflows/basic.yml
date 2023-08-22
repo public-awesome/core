@@ -1,8 +1,7 @@
-# Based on https://github.com/actions-rs/example/blob/master/.github/workflows/quickstart.yml
-
-on: [pull_request]
-
 name: Basic
+
+on:
+  pull_request:
 
 jobs:
   compile:
@@ -25,8 +24,45 @@ jobs:
         with:
           command: wasm
           args: --locked
-        env:
-          RUSTFLAGS: "-C link-arg=-s"
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: 1.68.2
+          override: true
+          components: rustfmt, clippy
+
+      - uses: extractions/setup-just@v1
+
+      - name: Run cargo doc
+        uses: actions-rs/cargo@v1
+        with:
+          command: doc
+          args: -F library --no-deps
+
+      - name: Run cargo clippy
+        run: just lint
+
+      - name: Generate Schema
+        run: just schema
+
+      - name: Schema Changes
+        # fails if any changes not committed
+        run: |
+          CHANGES_IN_REPO=$(git status --porcelain)
+          if [[ -n "$CHANGES_IN_REPO" ]]; then
+            echo "Repository is dirty. Showing 'git status' and 'git --no-pager diff' for debugging now:"
+            git status && git --no-pager diff
+            exit 1
+          fi
 
   coverage:
     name: Coverage
@@ -47,49 +83,3 @@ jobs:
         with:
           token: ${{secrets.CODECOV_TOKEN}}
           fail_ci_if_error: true
-
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout sources
-        uses: actions/checkout@v2
-
-      - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: 1.68.2
-          override: true
-          components: rustfmt, clippy
-
-      - name: Run cargo doc
-        uses: actions-rs/cargo@v1
-        with:
-          command: doc
-          args: -F library
-
-      - name: Run cargo fmt
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
-
-      - name: Run cargo clippy
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: -- -D warnings
-
-      - name: Generate Schema
-        run: sh scripts/schema.sh
-
-      - name: Schema Changes
-        # fails if any changes not committed
-        run: |
-          CHANGES_IN_REPO=$(git status --porcelain)
-          if [[ -n "$CHANGES_IN_REPO" ]]; then
-            echo "Repository is dirty. Showing 'git status' and 'git --no-pager diff' for debugging now:"
-            git status && git --no-pager diff
-            exit 1
-          fi

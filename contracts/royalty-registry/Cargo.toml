@@ -1,9 +1,9 @@
 [package]
-name          = "stargaze-fair-burn"
-version       = "1.0.4"
+name          = "stargaze-royalty-registry"
+version       = "0.1.0"
 authors       = ["Tasio Victoria <tasiovictoria@ujulabs.com>"]
-description   = "Stargaze Fair Burn"
-documentation = "https://docs.rs/stargaze-fair-burn"
+description   = "Stargaze Royalty Registry"
+documentation = "https://docs.rs/stargaze-royalty-registry"
 edition       = { workspace = true }
 homepage      = { workspace = true }
 repository    = { workspace = true }
@@ -31,15 +31,18 @@ backtraces = ["cosmwasm-std/backtraces"]
 # use library feature to disable all instantiate/execute/query exports
 library = []
 
-
 [dependencies]
+sg-index-query   = { version = "0.1.0" }
 cosmwasm-schema  = { workspace = true }
 cosmwasm-std     = { workspace = true }
 cosmwasm-storage = { workspace = true }
 cw-storage-plus  = { workspace = true }
+cw-storage-macro = { workspace = true }
 cw2              = { workspace = true }
 cw-utils         = { workspace = true }
 sg-std           = { workspace = true }
+sg721-base       = { workspace = true }
+sg721            = { workspace = true }
 schemars         = { workspace = true }
 serde            = { workspace = true }
 thiserror        = { workspace = true }
