@@ -15,12 +15,17 @@ stargaze-royalty-registry = { path = "contracts/royalty-registry", features = [
     "library",
 ] }
 
-sg-marketplace-common = { version = "1.1.0" }
+vending-factory = { version = "2.1.0", features = ["library"] }
+vending-minter  = { version = "2.1.0", features = ["library"] }
+base-minter     = { version = "2.1.0", features = ["library"] }
+base-factory    = { version = "2.1.0", features = ["library"] }
+sg721-base      = { version = "2.1.0", features = ["library"] }
+sg721           = { version = "2.1.0", features = ["library"] }
+
 sg-index-query        = { path = "packages/sg-index-query" }
-sg2                   = "2.1.0"
-sg721-base            = { version = "2.1.0", features = ["library"] }
-sg721                 = { version = "2.1.0", features = ["library"] }
 sg-std                = { path = "packages/sg-std" }
+sg-marketplace-common = { version = "1.1.0" }
+sg2                   = "2.1.0"
 
 cosmwasm-schema  = "1.3.1"
 cosmwasm-std     = "1.3.1"
