@@ -1,7 +1,9 @@
-use cosmwasm_schema::{cw_serde, QueryResponses};
-use cw2::ContractVersion;
-
+#[cfg_attr(not(debug_assertions), allow(unused_imports))]
 use crate::state::Config;
+
+use cosmwasm_schema::{cw_serde, QueryResponses};
+#[cfg_attr(not(debug_assertions), allow(unused_imports))]
+use cw2::ContractVersion;
 
 #[cw_serde]
 pub struct InstantiateMsg {

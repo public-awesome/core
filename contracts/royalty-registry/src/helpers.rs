@@ -4,7 +4,7 @@ use crate::{
     ContractError,
 };
 
-use cosmwasm_std::{ensure, to_binary, Addr, Deps, MessageInfo, WasmMsg};
+use cosmwasm_std::{ensure, to_binary, Addr, Deps, MessageInfo, QuerierWrapper, WasmMsg};
 use sg721_base::msg::{CollectionInfoResponse, QueryMsg as Sg721QueryMsg};
 use sg_std::Response;
 
@@ -25,6 +25,45 @@ pub fn only_collection_creator(
     );
 
     Ok(())
+}
+
+/// Invoke `fetch_royalty_entry` to fetch the royalties for a given NFT sale
+/// with an optional protocol address.
+///
+/// # Arguments
+///
+/// * `deps` - [cosmwasm_std::Deps]
+/// * `royalty_registry` - The address of the royalty registry.
+/// * `collection` - The address of the collection contract to fetch royalties for.
+/// * `protocol` - The address of the protocol looking to pay royalties (optional).
+///
+/// # Returns
+///
+/// * `RoyaltyEntry` - The [RoyaltyEntry] for the given collection and protocol (if any).
+///
+pub fn fetch_royalty_entry(
+    querier: &QuerierWrapper,
+    royalty_registry: &Addr,
+    collection: &Addr,
+    protocol: Option<&Addr>,
+) -> Result<Option<RoyaltyEntry>, ContractError> {
+    let royalty_payment_response = querier.query_wasm_smart::<RoyaltyPaymentResponse>(
+        royalty_registry,
+        &QueryMsg::RoyaltyPayment {
+            collection: collection.to_string(),
+            protocol: protocol.map(|p| p.to_string()),
+        },
+    )?;
+
+    if let Some(royalty_protocol) = royalty_payment_response.royalty_protocol {
+        return Ok(Some(royalty_protocol.royalty_entry));
+    }
+
+    if let Some(royalty_default) = royalty_payment_response.royalty_default {
+        return Ok(Some(royalty_default.royalty_entry));
+    }
+
+    Ok(None)
 }
 
 /// Invoke `fetch_or_set_royalties` to fetch the royalties for a given NFT sale
@@ -52,20 +91,9 @@ pub fn fetch_or_set_royalties(
     protocol: Option<&Addr>,
     mut response: Response,
 ) -> Result<(Option<RoyaltyEntry>, Response), ContractError> {
-    let royalty_payment_response = deps.querier.query_wasm_smart::<RoyaltyPaymentResponse>(
-        royalty_registry,
-        &QueryMsg::RoyaltyPayment {
-            collection: collection.to_string(),
-            protocol: protocol.map(|p| p.to_string()),
-        },
-    )?;
-
-    if let Some(royalty_protocol) = royalty_payment_response.royalty_protocol {
-        return Ok((Some(royalty_protocol.royalty_entry), response));
-    }
-
-    if let Some(royalty_default) = royalty_payment_response.royalty_default {
-        return Ok((Some(royalty_default.royalty_entry), response));
+    let royalty_entry = fetch_royalty_entry(&deps.querier, royalty_registry, collection, protocol)?;
+    if let Some(royalty_entry) = royalty_entry {
+        return Ok((Some(royalty_entry), response));
     }
 
     let collection_info: CollectionInfoResponse = deps

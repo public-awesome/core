@@ -9,7 +9,7 @@ repository  = { workspace = true }
 license     = { workspace = true }
 
 [dependencies]
-anyhow        = "1"
+anyhow        = { workspace = true }
 cosmwasm-std  = { workspace = true }
 cw-multi-test = { workspace = true }
 schemars      = { workspace = true }
