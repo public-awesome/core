@@ -4,7 +4,8 @@ use std::env;
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
     ensure, instantiate2_address, to_binary, Addr, Binary, CodeInfoResponse, ContractInfoResponse,
-    Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult, Timestamp, Uint128, WasmMsg,
+    Deps, DepsMut, Env, Event, MessageInfo, Response, StdError, StdResult, Timestamp, Uint128,
+    WasmMsg,
 };
 use cw2::set_contract_version;
 
@@ -19,11 +20,11 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 pub fn instantiate(
     deps: DepsMut,
     env: Env,
-    _info: MessageInfo,
+    info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
-
+    cw_ownable::initialize_owner(deps.storage, deps.api, Some(&info.sender.as_str()))?;
     let minter = env.contract.address;
 
     let canonical_creator = deps.api.addr_canonicalize(minter.as_str())?;
@@ -77,6 +78,11 @@ pub fn execute(
         ExecuteMsg::Mint { name } => execute_mint(deps, env, info, name),
         ExecuteMsg::Update { name } => execute_update(deps, env, info, name),
         ExecuteMsg::Pause {} => todo!(),
+        ExecuteMsg::UpdateConfig {
+            vip_collection,
+            name_collection,
+            update_interval,
+        } => execute_update_config(deps, info, vip_collection, name_collection, update_interval),
     }
 }
 
@@ -165,6 +171,38 @@ pub fn mint(
         msg: to_binary(&msg)?,
         funds: vec![],
     })
+}
+
+pub fn execute_update_config(
+    deps: DepsMut,
+    info: MessageInfo,
+    vip_collection: Option<String>,
+    name_collection: Option<String>,
+    update_interval: Option<u64>,
+) -> Result<Response, ContractError> {
+    cw_ownable::assert_owner(deps.storage, &info.sender)
+        .map_err(|_| ContractError::Unauthorized {})?;
+
+    let mut config = CONFIG.load(deps.storage)?;
+    if let Some(vip_collection) = vip_collection {
+        config.vip_collection = deps.api.addr_validate(&vip_collection)?;
+    }
+    if let Some(name_collection) = name_collection {
+        config.name_collection = deps.api.addr_validate(&name_collection)?;
+    }
+    if let Some(update_interval) = update_interval {
+        // TODO: define a min and max for update_interval (and update the error)
+        if update_interval < 1 {
+            return Err(ContractError::InvalidUpdateInterval {});
+        }
+        config.update_interval = update_interval;
+    }
+    CONFIG.save(deps.storage, &config)?;
+    let event = Event::new("update_config")
+        .add_attribute("vip_collection", config.vip_collection)
+        .add_attribute("name_collection", config.name_collection)
+        .add_attribute("update_interval", config.update_interval.to_string());
+    Ok(Response::new().add_event(event))
 }
 
 pub fn associated_address(deps: Deps, name: String) -> Result<Addr, ContractError> {

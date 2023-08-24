@@ -32,6 +32,7 @@ library = []
 
 
 [dependencies]
+cw-ownable              = { workspace = true }
 cosmwasm-schema         = { workspace = true }
 cosmwasm-std            = { workspace = true, features = ["staking"] }
 cosmwasm-storage        = { workspace = true }

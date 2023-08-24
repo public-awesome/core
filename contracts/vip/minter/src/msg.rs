@@ -15,6 +15,12 @@ pub enum ExecuteMsg {
     Update { name: String },
     /// So we can pause before migrating names, etc.
     Pause {},
+    /// Update the minter config params
+    UpdateConfig {
+        vip_collection: Option<String>,
+        name_collection: Option<String>,
+        update_interval: Option<u64>,
+    },
 }
 
 // #[allow(clippy::large_enum_variant)]
