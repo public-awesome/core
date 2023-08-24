@@ -10,6 +10,7 @@ pub struct Config {
 }
 
 pub const CONFIG: Item<Config> = Item::new("config");
+pub const PAUSED: Item<bool> = Item::new("paused");
 
 /// (block_height, [name1, name2, ...])
 pub const NAME_QUEUE: Map<u64, Vec<String>> = Map::new("nq");

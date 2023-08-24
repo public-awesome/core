@@ -11,7 +11,7 @@ use cw2::set_contract_version;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
-use crate::state::{Config, CONFIG, NAME_QUEUE};
+use crate::state::{Config, CONFIG, NAME_QUEUE, PAUSED};
 
 const CONTRACT_NAME: &str = "crates.io:stargaze-vip-minter";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -77,7 +77,8 @@ pub fn execute(
     match msg {
         ExecuteMsg::Mint { name } => execute_mint(deps, env, info, name),
         ExecuteMsg::Update { name } => execute_update(deps, env, info, name),
-        ExecuteMsg::Pause {} => todo!(),
+        ExecuteMsg::Pause {} => execute_pause(deps, info),
+        ExecuteMsg::Resume {} => execute_resume(deps, info),
         ExecuteMsg::UpdateConfig {
             vip_collection,
             name_collection,
@@ -96,6 +97,7 @@ pub fn execute_mint(
         info.sender == associated_address(deps.as_ref(), name.clone())?,
         ContractError::Unauthorized {}
     );
+    ensure!(!PAUSED.load(deps.storage)?, ContractError::Paused {});
 
     let Config {
         vip_collection,
@@ -134,6 +136,7 @@ pub fn execute_update(
         info.sender == associated_address(deps.as_ref(), name.clone())?,
         ContractError::Unauthorized {}
     );
+    ensure!(!PAUSED.load(deps.storage)?, ContractError::Paused {});
 
     let Config { vip_collection, .. } = CONFIG.load(deps.storage)?;
 
@@ -202,6 +205,28 @@ pub fn execute_update_config(
         .add_attribute("vip_collection", config.vip_collection)
         .add_attribute("name_collection", config.name_collection)
         .add_attribute("update_interval", config.update_interval.to_string());
+    Ok(Response::new().add_event(event))
+}
+
+pub fn execute_pause(deps: DepsMut, info: MessageInfo) -> Result<Response, ContractError> {
+    cw_ownable::assert_owner(deps.storage, &info.sender)
+        .map_err(|_| ContractError::Unauthorized {})?;
+
+    ensure!(!PAUSED.load(deps.storage)?, ContractError::AlreadyPaused {});
+    PAUSED.save(deps.storage, &true)?;
+
+    let event = Event::new("pause");
+    Ok(Response::new().add_event(event))
+}
+
+pub fn execute_resume(deps: DepsMut, info: MessageInfo) -> Result<Response, ContractError> {
+    cw_ownable::assert_owner(deps.storage, &info.sender)
+        .map_err(|_| ContractError::Unauthorized {})?;
+
+    ensure!(PAUSED.load(deps.storage)?, ContractError::NotPaused {});
+    PAUSED.save(deps.storage, &false)?;
+
+    let event = Event::new("resume");
     Ok(Response::new().add_event(event))
 }
 

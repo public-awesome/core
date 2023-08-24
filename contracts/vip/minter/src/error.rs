@@ -11,6 +11,15 @@ pub enum ContractError {
 
     #[error("InvalidUpdateInterval")]
     InvalidUpdateInterval {},
+
+    #[error("Paused")]
+    Paused {},
+
+    #[error("AlreadyPaused")]
+    AlreadyPaused {},
+
+    #[error("NotPaused")]
+    NotPaused {},
     // Add any other custom errors you like here.
     // Look at https://docs.rs/thiserror/1.0.21/thiserror/ for details.
 }
