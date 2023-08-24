@@ -8,8 +8,7 @@ use cosmwasm_std::{ensure, to_binary, Addr, Deps, MessageInfo, QuerierWrapper, W
 use sg721_base::msg::{CollectionInfoResponse, QueryMsg as Sg721QueryMsg};
 use sg_std::Response;
 
-/// Ensures that the sender is the collection contract admin. If a collection contract admin does not exist,
-/// then the sender must be the collection contract creator.
+/// Ensures that the sender is the collection creator.
 pub fn only_collection_creator(
     deps: Deps,
     info: &MessageInfo,
