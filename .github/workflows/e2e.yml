@@ -1,0 +1,43 @@
+name: E2E Integration Tests
+
+on:
+  pull_request:
+
+jobs:
+  test:
+    name: E2E tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v3
+
+      - name: Install latest nightly toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: nightly
+          targets: wasm32-unknown-unknown
+
+      - name: Rust Dependencies Cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+            artifacts/
+          key: ${{ runner.os }}-cargo-with-artifacts-${{ hashFiles('**/Cargo.lock') }}
+
+      - uses: extractions/setup-just@v1
+
+      - name: Download artifacts
+        run: just download-artifacts
+
+      - name: Optimize contracts
+        run: just optimize
+
+      - name: Run local stargaze chain
+        run: just deploy-local
+
+      - name: Run e2e tests
+        run: just e2e-test
