@@ -643,3 +643,101 @@ fn try_update_collection_royalty_protocol() {
         })
     );
 }
+
+#[test]
+fn try_over_100_percent_royalty() {
+    let vt = standard_minter_template(1);
+    let (mut router, creator, bidder) = (vt.router, vt.accts.creator, vt.accts.bidder);
+    let royalty_registry = setup_royalty_registry(&mut router, creator.clone());
+    let collection = vt.collection_response_vec[0].collection.clone().unwrap();
+    let protocol = Addr::unchecked("protocol");
+
+    let config: Config = router
+        .wrap()
+        .query_wasm_smart(royalty_registry.clone(), &QueryMsg::Config {})
+        .unwrap();
+
+    setup_block_time(&mut router, GENESIS_MINT_START_TIME, None);
+    let mut block_time = router.block_info().time;
+
+    let msg = ExecuteMsg::SetCollectionRoyaltyProtocol {
+        collection: collection.to_string(),
+        protocol: protocol.to_string(),
+        recipient: creator.to_string(),
+        share: Decimal::percent(10),
+    };
+
+    let response = router.execute_contract(creator.clone(), royalty_registry.clone(), &msg, &[]);
+    assert!(response.is_ok());
+
+    // Collection owner can not exceed 100% royalty. Test 101% royalty
+    let msg = ExecuteMsg::UpdateCollectionRoyaltyProtocol {
+        collection: collection.to_string(),
+        protocol: protocol.to_string(),
+        recipient: Some(bidder.to_string()),
+        share_delta: Some(Decimal::percent(10)),
+        decrement: None,
+    };
+    for i in 1..=91 {
+        block_time = block_time.plus_seconds(config.update_wait_period);
+        setup_block_time(&mut router, block_time.nanos(), None);
+        let response =
+            router.execute_contract(creator.clone(), royalty_registry.clone(), &msg, &[]);
+        // 10 + 91 = 101% > 100% max royalty
+        if i == 91 {
+            assert_error(
+                response,
+                ContractError::InvalidCollectionRoyalty(
+                    "Royalty share must be less than or equal to 1".to_string(),
+                )
+                .to_string(),
+            );
+        } else {
+            assert!(response.is_ok());
+        }
+    }
+}
+
+#[test]
+fn try_0_royalty() {
+    let vt = standard_minter_template(1);
+    let (mut router, creator, bidder) = (vt.router, vt.accts.creator, vt.accts.bidder);
+    let royalty_registry = setup_royalty_registry(&mut router, creator.clone());
+    let collection = vt.collection_response_vec[0].collection.clone().unwrap();
+    let protocol = Addr::unchecked("protocol");
+
+    let config: Config = router
+        .wrap()
+        .query_wasm_smart(royalty_registry.clone(), &QueryMsg::Config {})
+        .unwrap();
+
+    setup_block_time(&mut router, GENESIS_MINT_START_TIME, None);
+    let mut block_time = router.block_info().time;
+
+    let msg = ExecuteMsg::SetCollectionRoyaltyProtocol {
+        collection: collection.to_string(),
+        protocol: protocol.to_string(),
+        recipient: creator.to_string(),
+        share: Decimal::percent(10),
+    };
+
+    let response = router.execute_contract(creator.clone(), royalty_registry.clone(), &msg, &[]);
+    assert!(response.is_ok());
+
+    // Collection owner can decrement to 0% royalty
+    let msg = ExecuteMsg::UpdateCollectionRoyaltyProtocol {
+        collection: collection.to_string(),
+        protocol: protocol.to_string(),
+        recipient: Some(bidder.to_string()),
+        share_delta: Some(Decimal::percent(10)),
+        decrement: Some(true),
+    };
+    for _ in 1..=10 {
+        block_time = block_time.plus_seconds(config.update_wait_period);
+        setup_block_time(&mut router, block_time.nanos(), None);
+
+        let response =
+            router.execute_contract(creator.clone(), royalty_registry.clone(), &msg, &[]);
+        assert!(response.is_ok());
+    }
+}
