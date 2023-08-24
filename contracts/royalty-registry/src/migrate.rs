@@ -10,6 +10,7 @@ use sg_std::Response;
 use cosmwasm_std::entry_point;
 
 #[cfg_attr(not(feature = "library"), entry_point)]
+#[allow(clippy::cmp_owned)]
 pub fn migrate(deps: DepsMut, _env: Env, _msg: Empty) -> Result<Response, ContractError> {
     let prev_contract_version = cw2::get_contract_version(deps.storage)?;
 
@@ -18,6 +19,7 @@ pub fn migrate(deps: DepsMut, _env: Env, _msg: Empty) -> Result<Response, Contra
         valid_contract_names.contains(&prev_contract_version.contract),
         StdError::generic_err("Invalid contract name for migration")
     );
+
     ensure!(
         prev_contract_version.version < CONTRACT_VERSION.to_string(),
         StdError::generic_err("Must upgrade contract version")
