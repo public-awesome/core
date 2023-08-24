@@ -1,6 +1,6 @@
 use crate::{
     error::ContractError,
-    helpers::only_collection_creator,
+    external::only_collection_creator,
     msg::ExecuteMsg,
     state::{
         RoyaltyDefault, RoyaltyEntry, RoyaltyProtocol, RoyaltyProtocolKey, CONFIG,
@@ -99,11 +99,12 @@ pub fn execute_initialize_collection_royalty(
     let mut response = Response::new();
 
     let royalty_default = ROYALTY_DEFAULTS.may_load(deps.storage, collection.clone())?;
-    if royalty_default.is_some() {
-        return Err(ContractError::InvalidCollectionRoyalty(
-            "Collection royalty already initialized".to_string(),
-        ));
-    }
+    ensure!(
+        royalty_default.is_none(),
+        ContractError::InvalidCollectionRoyalty(
+            "Collection royalty already initialized".to_string()
+        )
+    );
 
     let collection_info: CollectionInfoResponse = deps
         .querier
@@ -158,11 +159,12 @@ pub fn execute_set_collection_royalty_default(
     let mut response = Response::new();
 
     let royalty_default = ROYALTY_DEFAULTS.may_load(deps.storage, collection.clone())?;
-    if royalty_default.is_some() {
-        return Err(ContractError::InvalidCollectionRoyalty(
-            "Collection royalty already initialized".to_string(),
-        ));
-    }
+    ensure!(
+        royalty_default.is_none(),
+        ContractError::InvalidCollectionRoyalty(
+            "Collection royalty already initialized".to_string()
+        )
+    );
 
     let royalty_default = RoyaltyDefault {
         collection: collection.clone(),

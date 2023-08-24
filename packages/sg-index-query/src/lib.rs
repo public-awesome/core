@@ -25,10 +25,10 @@
 //! let query_options = QueryOptions::<String>::default();
 //! ```
 //!
-//! You can specify query parameters like so:
+//! You can specify query parameters and unpack like so:
 //!
 //! ```rust
-//! use sg_index_query::{QueryOptions, QueryBound};
+//! use sg_index_query::{QueryOptions, QueryBound, QueryOptionsInternal};
 //!
 //! let query_options = QueryOptions {
 //!     descending: Some(true),
@@ -36,11 +36,7 @@
 //!     min: Some(QueryBound::Inclusive("test".to_string())),
 //!     max: Some(QueryBound::Exclusive("test2".to_string())),
 //! };
-//! ```
 //!
-//! Then, you can unpack the `QueryOptions` into `QueryOptionsInternal`:
-//!
-//! ```rust
 //! let query_options_internal = query_options.unpack(&|offset: &String| offset.to_string(), None, None);
 //! ```
 
