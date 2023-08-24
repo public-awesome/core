@@ -1,0 +1,29 @@
+name: Build and Upload Contracts
+
+on:
+  release:
+    types: [created, edited]
+
+jobs:
+  build_and_upload_contracts:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: extractions/setup-just@v1
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Build development contracts
+        run: just optimize
+
+      - name: Show data
+        run: |
+          ls -l artifacts
+          cat artifacts/checksums.txt
+
+      - name: Publish artifacts on GitHub
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            artifacts/*
