@@ -51,15 +51,6 @@ pub fn execute(
             Err(ContractError::Unauthorized {})
         }
         cw721_base::ExecuteMsg::RevokeAll { operator } => Err(ContractError::Unauthorized {}),
-        // cw721_base::ExecuteMsg::Mint {
-        //     token_id,
-        //     owner,
-        //     token_uri,
-        //     extension,
-        // } => todo!(),
-        // cw721_base::ExecuteMsg::Burn { token_id } => todo!(),
-        // cw721_base::ExecuteMsg::Extension { msg } => todo!(),
-        // cw721_base::ExecuteMsg::UpdateOwnership(_) => todo!(),
         _ => VipCollection::default()
             .execute(deps, env, info, msg)
             .map_err(Into::into),

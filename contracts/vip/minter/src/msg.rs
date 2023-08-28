@@ -15,7 +15,7 @@ pub enum ExecuteMsg {
     Update { name: String },
     /// So we can pause before migrating names, etc.
     Pause {},
-    /// So we can pause before migrating names, etc.
+    /// To resume paused operations
     Resume {},
     /// Update the minter config params
     UpdateConfig {
