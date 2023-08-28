@@ -11,7 +11,7 @@ use cw2::set_contract_version;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
-use crate::state::{Config, CONFIG, NAME_QUEUE, PAUSED};
+use crate::state::{Config, CONFIG, NAME_QUEUE, NAME_UPDATE_HEIGHT, PAUSED};
 
 const CONTRACT_NAME: &str = "crates.io:stargaze-vip-minter";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -99,11 +99,7 @@ pub fn execute_mint(
     );
     ensure!(!PAUSED.load(deps.storage)?, ContractError::Paused {});
 
-    let Config {
-        vip_collection,
-        update_interval,
-        ..
-    } = CONFIG.load(deps.storage)?;
+    let Config { vip_collection, .. } = CONFIG.load(deps.storage)?;
 
     let mint_msg = mint(
         deps.as_ref(),
@@ -113,15 +109,15 @@ pub fn execute_mint(
         vip_collection,
     )?;
 
-    NAME_QUEUE.update(
-        deps.storage,
-        env.block.height + update_interval,
-        |names| -> StdResult<_> {
-            let mut names = names.unwrap_or_default();
-            names.push(name);
-            Ok(names)
-        },
-    )?;
+    NAME_QUEUE.update(deps.storage, env.block.height, |names| -> StdResult<_> {
+        let mut names = names.unwrap_or_default();
+        names.push(name.clone());
+        Ok(names)
+    })?;
+
+    NAME_UPDATE_HEIGHT.update(deps.storage, name, |height| -> StdResult<_> {
+        Ok(env.block.height)
+    })?;
 
     Ok(Response::new().add_message(mint_msg))
 }
@@ -137,16 +133,32 @@ pub fn execute_update(
         ContractError::Unauthorized {}
     );
     ensure!(!PAUSED.load(deps.storage)?, ContractError::Paused {});
+    let Config {
+        vip_collection,
+        update_interval,
+        ..
+    } = CONFIG.load(deps.storage)?;
 
-    let Config { vip_collection, .. } = CONFIG.load(deps.storage)?;
+    let last_update_height = NAME_UPDATE_HEIGHT.may_load(deps.storage, name.clone())?;
+    if let Some(last_update_height) = last_update_height {
+        if env.block.height - last_update_height < update_interval {
+            return Err(ContractError::UpdateIntervalNotPassed {});
+        }
+    } else {
+        return Err(ContractError::TokenNotFound {});
+    }
 
     let mint_msg = mint(
         deps.as_ref(),
         info.sender,
         env.block.time,
-        name,
+        name.clone(),
         vip_collection,
     )?;
+
+    NAME_UPDATE_HEIGHT.update(deps.storage, name, |height| -> StdResult<_> {
+        Ok(env.block.height)
+    })?;
 
     Ok(Response::new().add_message(mint_msg))
 }

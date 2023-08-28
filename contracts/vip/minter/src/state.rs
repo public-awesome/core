@@ -15,4 +15,5 @@ pub const PAUSED: Item<bool> = Item::new("paused");
 /// (block_height, [name1, name2, ...])
 pub const NAME_QUEUE: Map<u64, Vec<String>> = Map::new("nq");
 
-// TODO: need secondary queue for name <> height mapping
+/// (name, block_height)
+pub const NAME_UPDATE_HEIGHT: Map<String, u64> = Map::new("nuh");
