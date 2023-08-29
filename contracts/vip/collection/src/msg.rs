@@ -7,7 +7,7 @@ use crate::state::Metadata;
 #[derive(QueryResponses)]
 pub enum QueryMsg {
     #[returns(Metadata)]
-    Metadata { address: String },
+    Metadata { token_id: String },
     #[returns(Uint128)]
     TotalStaked { owner: String },
 }

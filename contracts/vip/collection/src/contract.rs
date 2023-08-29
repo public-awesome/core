@@ -2,6 +2,7 @@
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 use cw2::set_contract_version;
+use cw721::Cw721Query;
 use cw721_base::InstantiateMsg;
 
 use crate::error::ContractError;
@@ -60,15 +61,11 @@ pub fn execute(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::Metadata { address } => to_binary(&query_metadata(deps, address)?),
+        QueryMsg::Metadata { token_id } => {
+            to_binary(&VipCollection::default().nft_info(deps, token_id)?.extension)
+        }
         QueryMsg::TotalStaked { owner } => to_binary(&query_total_staked(deps, owner)?),
     }
-}
-
-pub fn query_metadata(deps: Deps, address: String) -> StdResult<Binary> {
-    // TODO: get metadata by address (token_id)
-
-    todo!()
 }
 
 /// Total staked is the sum of all staked amounts for a given owner. If
@@ -80,16 +77,6 @@ pub fn query_total_staked(deps: Deps, owner: String) -> StdResult<Binary> {
 
     todo!()
 }
-
-// pub fn query_stake_weight(deps: Deps, env: Env, name: String) -> StdResult<Uint128> {
-//     let res: NftInfoResponse<Metadata> = VipCollection::default().query(
-//         deps,
-//         env,
-//         cw721_base::msg::QueryMsg::NftInfo { token_id: name },
-//     );
-
-//     res.extension.staked_amount
-// }
 
 #[cfg(test)]
 mod tests {}
