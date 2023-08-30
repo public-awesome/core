@@ -73,7 +73,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 /// sum the staked amounts.
 pub fn query_total_staked(deps: Deps, owner: String) -> StdResult<Binary> {
     // TODO: get all tokens by owner of `address` (token_id)
-    // TODO: iterate through metdata to get total stake weight
+    // TODO: iterate through metadata to get total stake weight
 
     todo!()
 }

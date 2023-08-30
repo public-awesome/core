@@ -8,7 +8,9 @@ pub struct InstantiateMsg {
 }
 
 #[cw_serde]
-pub enum ExecuteMsg {}
+pub enum ExecuteMsg {
+    UpdateTiers { tiers: Vec<Uint128> },
+}
 
 #[cw_serde]
 #[derive(QueryResponses)]

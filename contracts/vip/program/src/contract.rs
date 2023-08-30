@@ -1,6 +1,8 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+use cosmwasm_std::{
+    to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, Uint128,
+};
 use cw2::set_contract_version;
 use stargaze_vip_collection::state::Metadata;
 
@@ -16,12 +18,11 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 pub fn instantiate(
     deps: DepsMut,
     _env: Env,
-    _info: MessageInfo,
+    info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
-
-    // TODO: add cw_ownable so an admin can update tier limits
+    cw_ownable::initialize_owner(deps.storage, deps.api, Some(&info.sender.as_str()))?;
 
     COLLECTION.save(deps.storage, &deps.api.addr_validate(&msg.collection)?)?;
 
@@ -32,12 +33,26 @@ pub fn instantiate(
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(
-    _deps: DepsMut,
+    deps: DepsMut,
     _env: Env,
-    _info: MessageInfo,
-    _msg: ExecuteMsg,
+    info: MessageInfo,
+    msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
-    unimplemented!()
+    match msg {
+        ExecuteMsg::UpdateTiers { tiers } => execute_update_tiers(deps, info, tiers),
+    }
+}
+
+pub fn execute_update_tiers(
+    deps: DepsMut,
+    info: MessageInfo,
+    tiers: Vec<Uint128>,
+) -> Result<Response, ContractError> {
+    cw_ownable::assert_owner(deps.storage, &info.sender)
+        .map_err(|_| ContractError::Unauthorized {})?;
+    TIERS.save(deps.storage, &tiers)?;
+
+    Ok(Response::new())
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
