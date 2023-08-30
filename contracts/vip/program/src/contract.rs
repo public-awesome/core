@@ -73,6 +73,14 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 
             Ok(to_binary(&index)?)
         }
+        QueryMsg::Tiers {} => {
+            let tiers = TIERS.load(deps.storage)?;
+            Ok(to_binary(&tiers)?)
+        }
+        QueryMsg::Collection {} => {
+            let collection = COLLECTION.load(deps.storage)?;
+            Ok(to_binary(&collection)?)
+        }
     }
 }
 

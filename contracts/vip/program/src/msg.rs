@@ -17,4 +17,8 @@ pub enum ExecuteMsg {
 pub enum QueryMsg {
     #[returns(u64)]
     Tier { name: String },
+    #[returns(Vec<Uint128>)]
+    Tiers {},
+    #[returns(String)]
+    Collection {},
 }
