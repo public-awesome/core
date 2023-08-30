@@ -128,10 +128,6 @@ pub fn execute_update(
     info: MessageInfo,
     name: String,
 ) -> Result<Response, ContractError> {
-    ensure!(
-        info.sender == associated_address(deps.as_ref(), name.clone())?,
-        ContractError::Unauthorized {}
-    );
     ensure!(!PAUSED.load(deps.storage)?, ContractError::Paused {});
     let Config {
         vip_collection,
