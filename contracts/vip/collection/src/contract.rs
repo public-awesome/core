@@ -79,4 +79,16 @@ pub fn query_total_staked(deps: Deps, owner: String) -> StdResult<Binary> {
 }
 
 #[cfg(test)]
-mod tests {}
+mod tests {
+    use cw_multi_test::{Contract, ContractWrapper};
+    use sg_std::StargazeMsgWrapper;
+
+    fn minter_contract() -> Box<dyn Contract<StargazeMsgWrapper>> {
+        let contract = ContractWrapper::new(
+            crate::contract::instantiate,
+            crate::contract::execute,
+            crate::contract::query,
+        );
+        Box::new(contract)
+    }
+}

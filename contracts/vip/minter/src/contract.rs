@@ -62,9 +62,11 @@ pub fn instantiate(
         salt: Binary::from(salt.to_vec()),
     };
 
+    let event = Event::new("instantiate").add_attribute("collection", collection);
+
     Ok(Response::new()
         .add_message(collection_init_msg)
-        .add_attribute("collection", collection))
+        .add_event(event))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -115,11 +117,11 @@ pub fn execute_mint(
         Ok(names)
     })?;
 
-    NAME_UPDATE_HEIGHT.update(deps.storage, name, |height| -> StdResult<_> {
+    NAME_UPDATE_HEIGHT.update(deps.storage, name, |_| -> StdResult<_> {
         Ok(env.block.height)
     })?;
-
-    Ok(Response::new().add_message(mint_msg))
+    let event = Event::new("mint");
+    Ok(Response::new().add_message(mint_msg).add_event(event))
 }
 
 pub fn execute_update(
@@ -152,11 +154,11 @@ pub fn execute_update(
         vip_collection,
     )?;
 
-    NAME_UPDATE_HEIGHT.update(deps.storage, name, |height| -> StdResult<_> {
+    NAME_UPDATE_HEIGHT.update(deps.storage, name, |_| -> StdResult<_> {
         Ok(env.block.height)
     })?;
-
-    Ok(Response::new().add_message(mint_msg))
+    let event = Event::new("update");
+    Ok(Response::new().add_message(mint_msg).add_event(event))
 }
 
 pub fn mint(
@@ -269,4 +271,14 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 }
 
 #[cfg(test)]
-mod tests {}
+mod tests {
+    use crate::sudo;
+    use cw_multi_test::{Contract, ContractWrapper};
+    use sg_std::StargazeMsgWrapper;
+
+    fn minter_contract() -> Box<dyn Contract<StargazeMsgWrapper>> {
+        let contract = ContractWrapper::new(super::execute, super::instantiate, super::query)
+            .with_sudo(sudo::sudo);
+        Box::new(contract)
+    }
+}

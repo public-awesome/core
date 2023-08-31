@@ -33,11 +33,11 @@ pub fn sudo(deps: DepsMut, env: Env, msg: SudoMsg) -> Result<Response, ContractE
     }
 }
 
-pub fn sudo_begin_block(deps: DepsMut, env: Env) -> Result<Response, ContractError> {
+pub fn sudo_begin_block(_deps: DepsMut, _env: Env) -> Result<Response, ContractError> {
     Ok(Response::new())
 }
 
-pub fn sudo_end_block(deps: DepsMut, env: Env) -> Result<Response, ContractError> {
+pub fn sudo_end_block(_deps: DepsMut, _env: Env) -> Result<Response, ContractError> {
     /*let Config {
         vip_collection,
         update_interval,

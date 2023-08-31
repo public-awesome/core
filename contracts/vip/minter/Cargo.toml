@@ -43,8 +43,11 @@ cw721-base              = { workspace = true }
 schemars                = { workspace = true }
 serde                   = { workspace = true }
 thiserror               = { workspace = true }
+sg-multi-test           = { workspace = true }
+sg-std                  = { workspace = true }
 sg-name                 = "1.2.5"
 stargaze-vip-collection = { path = "../collection", features = ["library"] }
 
 [dev-dependencies]
 cw-multi-test = { workspace = true }
+sg-multi-test = { workspace = true }
