@@ -8,6 +8,13 @@ pub struct InstantiateMsg {
 }
 
 #[cw_serde]
+pub struct ConfigResponse {
+    pub vip_collection: String,
+    pub name_collection: String,
+    pub update_interval: u64,
+}
+
+#[cw_serde]
 pub enum ExecuteMsg {
     /// Mint a loyalty token for the given name
     Mint { name: String },
@@ -39,4 +46,11 @@ pub enum SudoMsg {
 
 #[cw_serde]
 #[derive(QueryResponses)]
-pub enum QueryMsg {}
+pub enum QueryMsg {
+    #[returns(ConfigResponse)]
+    Config {},
+    #[returns(bool)]
+    IsPaused {},
+    #[returns(u64)]
+    NameUpdateHeight { name: String },
+}

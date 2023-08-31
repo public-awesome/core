@@ -258,8 +258,14 @@ fn total_staked(deps: Deps, address: Addr) -> StdResult<Uint128> {
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn query(_deps: Deps, _env: Env, _msg: QueryMsg) -> StdResult<Binary> {
-    unimplemented!()
+pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
+    match msg {
+        QueryMsg::Config {} => to_binary(&CONFIG.load(deps.storage)?),
+        QueryMsg::IsPaused {} => to_binary(&PAUSED.load(deps.storage)?),
+        QueryMsg::NameUpdateHeight { name } => {
+            to_binary(&NAME_UPDATE_HEIGHT.load(deps.storage, name)?)
+        }
+    }
 }
 
 #[cfg(test)]
