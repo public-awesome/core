@@ -37,11 +37,16 @@ pub enum ExecuteMsg {
 pub enum SudoMsg {
     BeginBlock {}, // Is called by x/cron module BeginBlocker
     EndBlock {},   // Is called by x/cron module EndBlocker
-                   // UpdateParams {
-                   //     // fair_burn: Option<String>,
-                   //     // trading_fee_percent: Option<Decimal>,
-                   //     // min_bid_increment_percent: Option<Decimal>,
-                   // },
+    // UpdateParams {
+    //     // fair_burn: Option<String>,
+    //     // trading_fee_percent: Option<Decimal>,
+    //     // min_bid_increment_percent: Option<Decimal>,
+    // },
+    UpdateConfig {
+        vip_collection: Option<String>,
+        name_collection: Option<String>,
+        update_interval: Option<u64>,
+    },
 }
 
 #[cw_serde]
