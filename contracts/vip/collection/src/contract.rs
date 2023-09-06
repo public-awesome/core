@@ -83,7 +83,7 @@ mod tests {
     use cw_multi_test::{Contract, ContractWrapper};
     use sg_std::StargazeMsgWrapper;
 
-    fn minter_contract() -> Box<dyn Contract<StargazeMsgWrapper>> {
+    fn collection_contract() -> Box<dyn Contract<StargazeMsgWrapper>> {
         let contract = ContractWrapper::new(
             crate::contract::instantiate,
             crate::contract::execute,

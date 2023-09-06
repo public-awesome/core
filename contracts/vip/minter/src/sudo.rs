@@ -1,6 +1,7 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{DepsMut, Env, Event, Response};
+use cosmwasm_std::{DepsMut, Env, Event};
+use sg_std::Response;
 
 use crate::{
     contract::{associated_address, mint},

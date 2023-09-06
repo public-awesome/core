@@ -2211,7 +2211,6 @@ dependencies = [
  "cw-multi-test",
  "cw-ownable",
  "cw-storage-plus 1.1.0",
- "cw-utils 1.0.1",
  "cw2 1.1.0",
  "cw721 0.18.0",
  "cw721-base 0.18.0",
@@ -2220,7 +2219,6 @@ dependencies = [
  "sg-multi-test",
  "sg-name",
  "sg-std",
- "stargaze-fair-burn",
  "stargaze-vip-collection",
  "thiserror",
 ]
