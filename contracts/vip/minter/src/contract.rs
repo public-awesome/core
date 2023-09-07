@@ -4,10 +4,9 @@ use std::env;
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
     ensure, instantiate2_address, to_binary, Addr, Binary, CodeInfoResponse, ContractInfoResponse,
-    Deps, DepsMut, Env, Event, MessageInfo, StdError, StdResult, Timestamp, Uint128, WasmMsg,
+    Deps, DepsMut, Env, Event, MessageInfo, Response, StdError, StdResult, Timestamp, Uint128, WasmMsg,
 };
 use cw2::set_contract_version;
-use sg_std::Response;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
@@ -252,19 +251,15 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 #[cfg(test)]
 mod tests {
     use crate::msg::InstantiateMsg;
-    use crate::sudo;
-    use cosmwasm_std::{to_binary, Addr, Event, WasmMsg};
-    use cw_multi_test::{Contract, ContractWrapper, Executor};
-    use sg_multi_test::StargazeApp;
-    use sg_std::StargazeMsgWrapper;
+    use cosmwasm_std::{to_binary, Addr, Event, WasmMsg, Empty};
+    use cw_multi_test::{App, Contract, ContractWrapper, Executor};
 
-    fn minter_contract() -> Box<dyn Contract<StargazeMsgWrapper>> {
-        let contract = ContractWrapper::new(super::instantiate, super::execute, super::query)
-            .with_sudo(sudo::sudo);
+    fn minter_contract() -> Box<dyn Contract<Empty>> {
+        let contract = ContractWrapper::new(super::instantiate, super::execute, super::query);
         Box::new(contract)
     }
 
-    fn collection_contract() -> Box<dyn Contract<StargazeMsgWrapper>> {
+    fn collection_contract() -> Box<dyn Contract<Empty>> {
         let contract = ContractWrapper::new(
             stargaze_vip_collection::contract::execute,
             stargaze_vip_collection::contract::instantiate,
@@ -274,7 +269,7 @@ mod tests {
     }
     #[test]
     fn try_instantiate() {
-        let mut app = StargazeApp::default();
+        let mut app = App::default();
         let minter_code_id = app.store_code(minter_contract());
         let collection_code_id = app.store_code(collection_contract());
 

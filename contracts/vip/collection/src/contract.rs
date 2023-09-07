@@ -2,12 +2,11 @@
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 use cw2::set_contract_version;
-use cw721::Cw721Query;
+use cw721::{Cw721Query};
 use cw721_base::InstantiateMsg;
 
 use crate::error::ContractError;
-use crate::msg::QueryMsg;
-use crate::{ExecuteMsg, VipCollection};
+use crate::{ExecuteMsg, QueryMsg, VipCollection};
 
 const CONTRACT_NAME: &str = "crates.io:stargaze-vip-collection";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -59,31 +58,16 @@ pub fn execute(
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
-    match msg {
-        QueryMsg::Metadata { token_id } => {
-            to_binary(&VipCollection::default().nft_info(deps, token_id)?.extension)
-        }
-        QueryMsg::TotalStaked { owner } => to_binary(&query_total_staked(deps, owner)?),
-    }
-}
-
-/// Total staked is the sum of all staked amounts for a given owner. If
-/// an owner has multiple items, it will iterate through all of them and
-/// sum the staked amounts.
-pub fn query_total_staked(deps: Deps, owner: String) -> StdResult<Binary> {
-    // TODO: get all tokens by owner of `address` (token_id)
-    // TODO: iterate through metadata to get total stake weight
-
-    todo!()
+pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
+    VipCollection::default().query(deps, env, msg)
 }
 
 #[cfg(test)]
 mod tests {
+    use cosmwasm_std::Empty;
     use cw_multi_test::{Contract, ContractWrapper};
-    use sg_std::StargazeMsgWrapper;
 
-    fn collection_contract() -> Box<dyn Contract<StargazeMsgWrapper>> {
+    fn collection_contract() -> Box<dyn Contract<Empty>> {
         let contract = ContractWrapper::new(
             crate::contract::instantiate,
             crate::contract::execute,
