@@ -11,7 +11,9 @@ use sg_std::Response;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
-use crate::state::{Config, CONFIG, NAME_QUEUE, NAME_UPDATE_HEIGHT, PAUSED};
+use crate::state::{
+    increment_token_index, Config, CONFIG, PAUSED, TOKEN_INDEX, TOKEN_UPDATE_HEIGHT,
+};
 
 const CONTRACT_NAME: &str = "crates.io:stargaze-vip-minter";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -44,7 +46,6 @@ pub fn instantiate(
         deps.storage,
         &Config {
             vip_collection: deps.api.addr_validate(collection.as_str())?,
-            name_collection: deps.api.addr_validate(&msg.name_collection)?,
             update_interval: msg.update_interval,
         },
     )?;
@@ -77,47 +78,35 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::Mint { name } => execute_mint(deps, env, info, name),
-        ExecuteMsg::Update { name } => execute_update(deps, env, info, name),
+        ExecuteMsg::Mint {} => execute_mint(deps, env, info),
+        ExecuteMsg::Update { token_id } => execute_update(deps, env, info, token_id),
         ExecuteMsg::Pause {} => execute_pause(deps, info),
         ExecuteMsg::Resume {} => execute_resume(deps, info),
         ExecuteMsg::UpdateConfig {
             vip_collection,
-            name_collection,
             update_interval,
-        } => execute_update_config(deps, info, vip_collection, name_collection, update_interval),
+        } => execute_update_config(deps, info, vip_collection, update_interval),
     }
 }
 
 pub fn execute_mint(
-    deps: DepsMut,
+    mut deps: DepsMut,
     env: Env,
     info: MessageInfo,
-    name: String,
 ) -> Result<Response, ContractError> {
-    ensure!(
-        info.sender == associated_address(deps.as_ref(), name.clone())?,
-        ContractError::Unauthorized {}
-    );
     ensure!(!PAUSED.load(deps.storage)?, ContractError::Paused {});
 
     let Config { vip_collection, .. } = CONFIG.load(deps.storage)?;
 
     let mint_msg = mint(
-        deps.as_ref(),
+        deps.branch(),
         info.sender,
         env.block.time,
-        name.clone(),
         vip_collection,
+        None,
     )?;
-
-    NAME_QUEUE.update(deps.storage, env.block.height, |names| -> StdResult<_> {
-        let mut names = names.unwrap_or_default();
-        names.push(name.clone());
-        Ok(names)
-    })?;
-
-    NAME_UPDATE_HEIGHT.update(deps.storage, name, |_| -> StdResult<_> {
+    let token_id = TOKEN_INDEX.load(deps.storage)?;
+    TOKEN_UPDATE_HEIGHT.update(deps.storage, token_id, |_| -> StdResult<_> {
         Ok(env.block.height)
     })?;
     let event = Event::new("mint");
@@ -125,10 +114,10 @@ pub fn execute_mint(
 }
 
 pub fn execute_update(
-    deps: DepsMut,
+    mut deps: DepsMut,
     env: Env,
     info: MessageInfo,
-    name: String,
+    token_id: u64,
 ) -> Result<Response, ContractError> {
     ensure!(!PAUSED.load(deps.storage)?, ContractError::Paused {});
     let Config {
@@ -137,7 +126,7 @@ pub fn execute_update(
         ..
     } = CONFIG.load(deps.storage)?;
 
-    let last_update_height = NAME_UPDATE_HEIGHT.may_load(deps.storage, name.clone())?;
+    let last_update_height = TOKEN_UPDATE_HEIGHT.may_load(deps.storage, token_id.clone())?;
     if let Some(last_update_height) = last_update_height {
         if env.block.height - last_update_height < update_interval {
             return Err(ContractError::UpdateIntervalNotPassed {});
@@ -147,29 +136,33 @@ pub fn execute_update(
     }
 
     let mint_msg = mint(
-        deps.as_ref(),
+        deps.branch(),
         info.sender,
         env.block.time,
-        name.clone(),
         vip_collection,
+        Some(token_id),
     )?;
 
-    NAME_UPDATE_HEIGHT.update(deps.storage, name, |_| -> StdResult<_> {
+    TOKEN_UPDATE_HEIGHT.update(deps.storage, token_id, |_| -> StdResult<_> {
         Ok(env.block.height)
     })?;
     let event = Event::new("update");
     Ok(Response::new().add_message(mint_msg).add_event(event))
 }
-
 pub fn mint(
-    deps: Deps,
+    deps: DepsMut,
     sender: Addr,
     block_time: Timestamp,
-    name: String,
     vip_collection: Addr,
+    token_id: Option<u64>,
 ) -> Result<WasmMsg, ContractError> {
+    let token_id_to_mint = match token_id {
+        Some(id) => id.to_string(), // to be used for updates
+        None => increment_token_index(deps.storage)?.to_string(),
+    };
+
     let msg = stargaze_vip_collection::ExecuteMsg::Mint {
-        token_id: name,
+        token_id: token_id_to_mint,
         owner: sender.to_string(),
         token_uri: None,
         extension: stargaze_vip_collection::state::Metadata {
@@ -190,7 +183,6 @@ pub fn execute_update_config(
     deps: DepsMut,
     info: MessageInfo,
     vip_collection: Option<String>,
-    name_collection: Option<String>,
     update_interval: Option<u64>,
 ) -> Result<Response, ContractError> {
     cw_ownable::assert_owner(deps.storage, &info.sender)
@@ -199,9 +191,6 @@ pub fn execute_update_config(
     let mut config = CONFIG.load(deps.storage)?;
     if let Some(vip_collection) = vip_collection {
         config.vip_collection = deps.api.addr_validate(&vip_collection)?;
-    }
-    if let Some(name_collection) = name_collection {
-        config.name_collection = deps.api.addr_validate(&name_collection)?;
     }
     if let Some(update_interval) = update_interval {
         // TODO: define a min and max for update_interval (and update the error)
@@ -213,7 +202,6 @@ pub fn execute_update_config(
     CONFIG.save(deps.storage, &config)?;
     let event = Event::new("update_config")
         .add_attribute("vip_collection", config.vip_collection)
-        .add_attribute("name_collection", config.name_collection)
         .add_attribute("update_interval", config.update_interval.to_string());
     Ok(Response::new().add_event(event))
 }
@@ -240,16 +228,7 @@ pub fn execute_resume(deps: DepsMut, info: MessageInfo) -> Result<Response, Cont
     Ok(Response::new().add_event(event))
 }
 
-pub fn associated_address(deps: Deps, name: String) -> Result<Addr, ContractError> {
-    let associated_addr: Addr = deps.querier.query_wasm_smart(
-        CONFIG.load(deps.storage)?.name_collection,
-        &sg_name::SgNameQueryMsg::AssociatedAddress { name },
-    )?;
-
-    Ok(associated_addr)
-}
-
-fn total_staked(deps: Deps, address: Addr) -> StdResult<Uint128> {
+fn total_staked(deps: DepsMut, address: Addr) -> StdResult<Uint128> {
     let total = deps
         .querier
         .query_all_delegations(address)?
@@ -264,8 +243,8 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::Config {} => to_binary(&CONFIG.load(deps.storage)?),
         QueryMsg::IsPaused {} => to_binary(&PAUSED.load(deps.storage)?),
-        QueryMsg::NameUpdateHeight { name } => {
-            to_binary(&NAME_UPDATE_HEIGHT.load(deps.storage, name)?)
+        QueryMsg::TokenUpdateHeight { token_id } => {
+            to_binary(&TOKEN_UPDATE_HEIGHT.load(deps.storage, token_id)?)
         }
     }
 }
@@ -303,7 +282,6 @@ mod tests {
 
         let init_msg = InstantiateMsg {
             collection_code_id,
-            name_collection: "name_collection".to_string(),
             update_interval: 100,
         };
         let msg = WasmMsg::Instantiate {

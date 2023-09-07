@@ -3,12 +3,7 @@ use cosmwasm_std::entry_point;
 use cosmwasm_std::{DepsMut, Env, Event};
 use sg_std::Response;
 
-use crate::{
-    contract::{associated_address, mint},
-    msg::SudoMsg,
-    state::{Config, CONFIG, NAME_QUEUE},
-    ContractError,
-};
+use crate::{msg::SudoMsg, state::CONFIG, ContractError};
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn sudo(deps: DepsMut, env: Env, msg: SudoMsg) -> Result<Response, ContractError> {
@@ -17,9 +12,8 @@ pub fn sudo(deps: DepsMut, env: Env, msg: SudoMsg) -> Result<Response, ContractE
         SudoMsg::EndBlock {} => sudo_end_block(deps, env),
         SudoMsg::UpdateConfig {
             vip_collection,
-            name_collection,
             update_interval,
-        } => sudo_execute_update_config(deps, vip_collection, name_collection, update_interval),
+        } => sudo_execute_update_config(deps, vip_collection, update_interval),
         // SudoMsg::UpdateParams {
         //     fair_burn,
         //     trading_fee_percent,
@@ -72,15 +66,11 @@ pub fn sudo_end_block(_deps: DepsMut, _env: Env) -> Result<Response, ContractErr
 pub fn sudo_execute_update_config(
     deps: DepsMut,
     vip_collection: Option<String>,
-    name_collection: Option<String>,
     update_interval: Option<u64>,
 ) -> Result<Response, ContractError> {
     let mut config = CONFIG.load(deps.storage)?;
     if let Some(vip_collection) = vip_collection {
         config.vip_collection = deps.api.addr_validate(&vip_collection)?;
-    }
-    if let Some(name_collection) = name_collection {
-        config.name_collection = deps.api.addr_validate(&name_collection)?;
     }
     if let Some(update_interval) = update_interval {
         // TODO: define a min and max for update_interval (and update the error)
@@ -92,7 +82,6 @@ pub fn sudo_execute_update_config(
     CONFIG.save(deps.storage, &config)?;
     let event = Event::new("sudo_update_config")
         .add_attribute("vip_collection", config.vip_collection)
-        .add_attribute("name_collection", config.name_collection)
         .add_attribute("update_interval", config.update_interval.to_string());
     Ok(Response::new().add_event(event))
 }

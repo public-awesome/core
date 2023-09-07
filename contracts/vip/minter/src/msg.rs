@@ -3,23 +3,21 @@ use cosmwasm_schema::{cw_serde, QueryResponses};
 #[cw_serde]
 pub struct InstantiateMsg {
     pub collection_code_id: u64,
-    pub name_collection: String,
     pub update_interval: u64, // in blocks
 }
 
 #[cw_serde]
 pub struct ConfigResponse {
     pub vip_collection: String,
-    pub name_collection: String,
     pub update_interval: u64,
 }
 
 #[cw_serde]
 pub enum ExecuteMsg {
     /// Mint a loyalty token for the given name
-    Mint { name: String },
+    Mint {},
     /// Update the stake amount for the given name
-    Update { name: String },
+    Update { token_id: u64 },
     /// So we can pause before migrating names, etc.
     Pause {},
     /// To resume paused operations
@@ -27,7 +25,6 @@ pub enum ExecuteMsg {
     /// Update the minter config params
     UpdateConfig {
         vip_collection: Option<String>,
-        name_collection: Option<String>,
         update_interval: Option<u64>,
     },
 }
@@ -44,7 +41,6 @@ pub enum SudoMsg {
     // },
     UpdateConfig {
         vip_collection: Option<String>,
-        name_collection: Option<String>,
         update_interval: Option<u64>,
     },
 }
@@ -57,5 +53,5 @@ pub enum QueryMsg {
     #[returns(bool)]
     IsPaused {},
     #[returns(u64)]
-    NameUpdateHeight { name: String },
+    TokenUpdateHeight { token_id: u64 },
 }
