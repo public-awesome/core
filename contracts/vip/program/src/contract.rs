@@ -85,4 +85,30 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 }
 
 #[cfg(test)]
-mod tests {}
+mod tests {
+    use cosmwasm_std::{Addr, Empty, Uint128};
+    use cw_multi_test::{App, Contract, ContractWrapper, Executor};
+    use crate::msg::InstantiateMsg;
+
+    fn program_contract() -> Box<dyn Contract<Empty>> {
+        let contract = ContractWrapper::new(super::execute, super::instantiate, super::query);
+        Box::new(contract)
+    }
+
+
+    #[test]
+    fn try_instantiate() {
+        let mut app = App::default();
+        let program_contract_code_id = app.store_code(program_contract());
+
+        let creator = Addr::unchecked("creator");
+
+        let init_msg = InstantiateMsg {
+            collection: Addr::unchecked("collection").to_string(),
+            tiers: vec![Uint128::new(5000000000), Uint128::new(10000000000)],
+        };
+
+        let response = app.instantiate_contract(program_contract_code_id, creator, &init_msg, &[], "program contract", None);
+        assert!(response.is_ok())
+    }
+}
