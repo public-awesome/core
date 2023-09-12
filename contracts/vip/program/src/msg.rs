@@ -16,7 +16,7 @@ pub enum ExecuteMsg {
 #[derive(QueryResponses)]
 pub enum QueryMsg {
     #[returns(u64)]
-    Tier { name: String },
+    Tier { address: String },
     #[returns(Vec<Uint128>)]
     Tiers {},
     #[returns(String)]
