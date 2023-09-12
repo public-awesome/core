@@ -38,7 +38,7 @@ cosmwasm-storage = { workspace = true }
 cw-storage-plus  = { workspace = true }
 cw2              = { workspace = true }
 cw721            = { workspace = true }
-cw721-base       = { workspace = true }
+cw721-base       = { workspace = true, features = ["library"] }
 schemars         = { workspace = true }
 serde            = { workspace = true }
 thiserror        = { workspace = true }
