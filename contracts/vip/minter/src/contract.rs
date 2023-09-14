@@ -39,9 +39,6 @@ pub fn instantiate(
         .map_err(|_| StdError::generic_err("Could not calculate addr"))?;
     let collection = deps.api.addr_humanize(&canonical_addr)?;
 
-    let ContractInfoResponse { admin, .. } =
-        deps.querier.query_wasm_contract_info(minter.clone())?;
-
     CONFIG.save(
         deps.storage,
         &Config {
@@ -51,7 +48,7 @@ pub fn instantiate(
     )?;
 
     let collection_init_msg = WasmMsg::Instantiate2 {
-        admin,
+        admin: Some(String::from(info.sender)),
         code_id: msg.collection_code_id,
         label: String::from("vip-collection"),
         msg: to_binary(&cw721_base::InstantiateMsg {
