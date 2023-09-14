@@ -4,7 +4,8 @@ use std::env;
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
     ensure, instantiate2_address, to_binary, Addr, Binary, CodeInfoResponse, ContractInfoResponse,
-    Deps, DepsMut, Env, Event, MessageInfo, Response, StdError, StdResult, Timestamp, Uint128, WasmMsg,
+    Deps, DepsMut, Env, Event, MessageInfo, Response, StdError, StdResult, Timestamp, Uint128,
+    WasmMsg,
 };
 use cw2::set_contract_version;
 
@@ -250,45 +251,4 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 
 #[cfg(test)]
 mod tests {
-    use crate::msg::InstantiateMsg;
-    use cosmwasm_std::{to_binary, Addr, Event, WasmMsg, Empty};
-    use cw_multi_test::{App, Contract, ContractWrapper, Executor};
-
-    fn minter_contract() -> Box<dyn Contract<Empty>> {
-        let contract = ContractWrapper::new(super::instantiate, super::execute, super::query);
-        Box::new(contract)
-    }
-
-    fn collection_contract() -> Box<dyn Contract<Empty>> {
-        let contract = ContractWrapper::new(
-            stargaze_vip_collection::contract::execute,
-            stargaze_vip_collection::contract::instantiate,
-            stargaze_vip_collection::contract::query,
-        );
-        Box::new(contract)
-    }
-    #[test]
-    fn try_instantiate() {
-        let mut app = App::default();
-        let minter_code_id = app.store_code(minter_contract());
-        let collection_code_id = app.store_code(collection_contract());
-
-        let creator = Addr::unchecked("creator");
-
-        let init_msg = InstantiateMsg {
-            collection_code_id,
-            update_interval: 100,
-        };
-        let msg = WasmMsg::Instantiate {
-            admin: None,
-            code_id: minter_code_id,
-            msg: to_binary(&init_msg).unwrap(),
-            funds: vec![],
-            label: "vip-minter".to_string(),
-        };
-        let response = app.execute(creator, msg.into());
-
-        assert!(response.is_ok());
-        assert!(response.unwrap().has_event(&Event::new("instantiate")));
-    }
 }

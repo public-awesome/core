@@ -2217,7 +2217,6 @@ dependencies = [
  "schemars",
  "serde",
  "sg-multi-test",
- "sg-name",
  "sg-std",
  "stargaze-vip-collection",
  "thiserror",
