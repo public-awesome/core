@@ -47,6 +47,8 @@ pub fn instantiate(
         },
     )?;
 
+    PAUSED.save(deps.storage, &false)?;
+
     let collection_init_msg = WasmMsg::Instantiate2 {
         admin: Some(String::from(info.sender)),
         code_id: msg.collection_code_id,
