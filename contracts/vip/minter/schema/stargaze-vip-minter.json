@@ -7,15 +7,19 @@
     "title": "InstantiateMsg",
     "type": "object",
     "required": [
-      "name_collection",
-      "vip_collection"
+      "collection_code_id",
+      "update_interval"
     ],
     "properties": {
-      "name_collection": {
-        "type": "string"
+      "collection_code_id": {
+        "type": "integer",
+        "format": "uint64",
+        "minimum": 0.0
       },
-      "vip_collection": {
-        "type": "string"
+      "update_interval": {
+        "type": "integer",
+        "format": "uint64",
+        "minimum": 0.0
       }
     },
     "additionalProperties": false
@@ -33,14 +37,6 @@
         "properties": {
           "mint": {
             "type": "object",
-            "required": [
-              "name"
-            ],
-            "properties": {
-              "name": {
-                "type": "string"
-              }
-            },
             "additionalProperties": false
           }
         },
@@ -56,11 +52,13 @@
           "update": {
             "type": "object",
             "required": [
-              "name"
+              "token_id"
             ],
             "properties": {
-              "name": {
-                "type": "string"
+              "token_id": {
+                "type": "integer",
+                "format": "uint64",
+                "minimum": 0.0
               }
             },
             "additionalProperties": false
@@ -81,16 +79,142 @@
           }
         },
         "additionalProperties": false
+      },
+      {
+        "description": "To resume paused operations",
+        "type": "object",
+        "required": [
+          "resume"
+        ],
+        "properties": {
+          "resume": {
+            "type": "object",
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "description": "Update the minter config params",
+        "type": "object",
+        "required": [
+          "update_config"
+        ],
+        "properties": {
+          "update_config": {
+            "type": "object",
+            "properties": {
+              "update_interval": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "format": "uint64",
+                "minimum": 0.0
+              },
+              "vip_collection": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
       }
     ]
   },
   "query": {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "QueryMsg",
-    "type": "string",
-    "enum": []
+    "oneOf": [
+      {
+        "type": "object",
+        "required": [
+          "config"
+        ],
+        "properties": {
+          "config": {
+            "type": "object",
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "is_paused"
+        ],
+        "properties": {
+          "is_paused": {
+            "type": "object",
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "token_update_height"
+        ],
+        "properties": {
+          "token_update_height": {
+            "type": "object",
+            "required": [
+              "token_id"
+            ],
+            "properties": {
+              "token_id": {
+                "type": "integer",
+                "format": "uint64",
+                "minimum": 0.0
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    ]
   },
   "migrate": null,
   "sudo": null,
-  "responses": {}
+  "responses": {
+    "config": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ConfigResponse",
+      "type": "object",
+      "required": [
+        "update_interval",
+        "vip_collection"
+      ],
+      "properties": {
+        "update_interval": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0.0
+        },
+        "vip_collection": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "is_paused": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Boolean",
+      "type": "boolean"
+    },
+    "token_update_height": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "uint64",
+      "type": "integer",
+      "format": "uint64",
+      "minimum": 0.0
+    }
+  }
 }
