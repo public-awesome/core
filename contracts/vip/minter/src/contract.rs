@@ -155,20 +155,7 @@ pub fn mint(
     vip_collection: Addr,
     token_id: Option<u64>,
 ) -> Result<WasmMsg, ContractError> {
-    if token_id.is_some() {
-        // ensure that the sender is the owner of the token to be updated
-        let owner_of_response: OwnerOfResponse = deps.querier.query_wasm_smart(
-            vip_collection.clone(),
-            &cw721_base::msg::QueryMsg::<OwnerOfResponse>::OwnerOf {
-                token_id: token_id.unwrap().to_string(),
-                include_expired: None,
-            },
-        )?;
-        ensure!(
-            owner_of_response.owner == sender,
-            ContractError::Unauthorized {}
-        );
-    } else {
+    if token_id.is_none() {
         // ensure that the sender did not mint any tokens yet
         let tokens_response: TokensResponse = deps.querier.query_wasm_smart(
             vip_collection.clone(),
