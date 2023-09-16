@@ -7,7 +7,7 @@ use cosmwasm_std::{
     Event, MessageInfo, Response, StdError, StdResult, Timestamp, Uint128, WasmMsg,
 };
 use cw2::set_contract_version;
-use cw721::{OwnerOfResponse, TokensResponse};
+use cw721::TokensResponse;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
