@@ -1,10 +1,7 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{
-    to_binary, Binary, Deps, DepsMut, Empty, Env, MessageInfo, Response, StdResult,
-};
+use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 use cw2::set_contract_version;
-use cw721::Cw721Query;
 use cw721_base::state::TokenInfo;
 use cw721_base::InstantiateMsg;
 
@@ -37,24 +34,28 @@ pub fn execute(
 ) -> Result<Response, ContractError> {
     match msg {
         cw721_base::ExecuteMsg::TransferNft {
-            recipient,
-            token_id,
+            recipient: _,
+            token_id: _,
         } => Err(ContractError::Unauthorized {}),
         cw721_base::ExecuteMsg::SendNft {
-            contract,
-            token_id,
-            msg,
+            contract: _,
+            token_id: _,
+            msg: _,
         } => Err(ContractError::Unauthorized {}),
         cw721_base::ExecuteMsg::Approve {
-            spender,
-            token_id,
-            expires,
+            spender: _,
+            token_id: _,
+            expires: _,
         } => Err(ContractError::Unauthorized {}),
-        cw721_base::ExecuteMsg::Revoke { spender, token_id } => Err(ContractError::Unauthorized {}),
-        cw721_base::ExecuteMsg::ApproveAll { operator, expires } => {
-            Err(ContractError::Unauthorized {})
-        }
-        cw721_base::ExecuteMsg::RevokeAll { operator } => Err(ContractError::Unauthorized {}),
+        cw721_base::ExecuteMsg::Revoke {
+            spender: _,
+            token_id: _,
+        } => Err(ContractError::Unauthorized {}),
+        cw721_base::ExecuteMsg::ApproveAll {
+            operator: _,
+            expires: _,
+        } => Err(ContractError::Unauthorized {}),
+        cw721_base::ExecuteMsg::RevokeAll { operator: _ } => Err(ContractError::Unauthorized {}),
         cw721_base::ExecuteMsg::Mint {
             token_id,
             owner,
@@ -69,7 +70,7 @@ pub fn execute(
 
 pub fn execute_mint(
     mut deps: DepsMut,
-    env: Env,
+    _env: Env,
     info: MessageInfo,
     token_id: String,
     owner: String,
@@ -204,7 +205,7 @@ mod tests {
         assert!(response.is_ok());
         let app_response = response.unwrap();
         let event = find_event(&app_response, "wasm").unwrap();
-        let action = find_attribute(&event, "action").unwrap();
+        let action = find_attribute(event, "action").unwrap();
         assert_eq!(action, "mint");
 
         let transfer_msg: cw721_base::ExecuteMsg<Metadata, Empty> =

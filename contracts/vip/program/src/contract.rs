@@ -23,7 +23,7 @@ pub fn instantiate(
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
-    cw_ownable::initialize_owner(deps.storage, deps.api, Some(&info.sender.as_str()))?;
+    cw_ownable::initialize_owner(deps.storage, deps.api, Some(info.sender.as_str()))?;
 
     COLLECTION.save(deps.storage, &deps.api.addr_validate(&msg.collection)?)?;
 

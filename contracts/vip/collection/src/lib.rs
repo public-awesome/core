@@ -3,7 +3,6 @@ mod error;
 pub mod msg;
 pub mod state;
 use cosmwasm_std::Empty;
-use schemars::JsonSchema;
 use state::Metadata;
 
 pub use crate::error::ContractError;

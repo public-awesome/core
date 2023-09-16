@@ -3,9 +3,8 @@ use std::env;
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    ensure, instantiate2_address, to_binary, Addr, Binary, CodeInfoResponse, ContractInfoResponse,
-    Deps, DepsMut, Env, Event, MessageInfo, Response, StdError, StdResult, Timestamp, Uint128,
-    WasmMsg,
+    ensure, instantiate2_address, to_binary, Addr, Binary, CodeInfoResponse, Deps, DepsMut, Env,
+    Event, MessageInfo, Response, StdError, StdResult, Timestamp, Uint128, WasmMsg,
 };
 use cw2::set_contract_version;
 use cw721::{OwnerOfResponse, TokensResponse};
@@ -27,7 +26,7 @@ pub fn instantiate(
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
-    cw_ownable::initialize_owner(deps.storage, deps.api, Some(&info.sender.as_str()))?;
+    cw_ownable::initialize_owner(deps.storage, deps.api, Some(info.sender.as_str()))?;
     let minter = env.contract.address;
 
     let canonical_creator = deps.api.addr_canonicalize(minter.as_str())?;
@@ -126,7 +125,7 @@ pub fn execute_update(
         ..
     } = CONFIG.load(deps.storage)?;
 
-    let last_update_height = TOKEN_UPDATE_HEIGHT.may_load(deps.storage, token_id.clone())?;
+    let last_update_height = TOKEN_UPDATE_HEIGHT.may_load(deps.storage, token_id)?;
     if let Some(last_update_height) = last_update_height {
         if env.block.height - last_update_height < update_interval {
             return Err(ContractError::UpdateIntervalNotPassed {});
@@ -156,7 +155,8 @@ pub fn mint(
     vip_collection: Addr,
     token_id: Option<u64>,
 ) -> Result<WasmMsg, ContractError> {
-    if token_id.is_some() { // ensure that the sender is the owner of the token to be updated
+    if token_id.is_some() {
+        // ensure that the sender is the owner of the token to be updated
         let owner_of_response: OwnerOfResponse = deps.querier.query_wasm_smart(
             vip_collection.clone(),
             &cw721_base::msg::QueryMsg::<OwnerOfResponse>::OwnerOf {
@@ -168,7 +168,8 @@ pub fn mint(
             owner_of_response.owner == sender,
             ContractError::Unauthorized {}
         );
-    } else { // ensure that the sender did not mint any tokens yet
+    } else {
+        // ensure that the sender did not mint any tokens yet
         let tokens_response: TokensResponse = deps.querier.query_wasm_smart(
             vip_collection.clone(),
             &cw721_base::msg::QueryMsg::<TokensResponse>::Tokens {
@@ -178,7 +179,7 @@ pub fn mint(
             },
         )?;
         ensure!(
-            tokens_response.tokens.len() == 0,
+            tokens_response.tokens.is_empty(),
             ContractError::AlreadyMinted {}
         );
     }
