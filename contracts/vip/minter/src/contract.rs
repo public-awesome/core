@@ -179,7 +179,7 @@ pub fn mint(
         )?;
         ensure!(
             tokens_response.tokens.len() == 0,
-            ContractError::Unauthorized {}
+            ContractError::AlreadyMinted {}
         );
     }
 
