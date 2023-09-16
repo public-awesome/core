@@ -1,14 +1,16 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, Empty};
+use cosmwasm_std::{
+    to_binary, Binary, Deps, DepsMut, Empty, Env, MessageInfo, Response, StdResult,
+};
 use cw2::set_contract_version;
 use cw721::Cw721Query;
-use cw721_base::InstantiateMsg;
 use cw721_base::state::TokenInfo;
+use cw721_base::InstantiateMsg;
 
 use crate::error::ContractError;
-use crate::{ExecuteMsg, QueryMsg, VipCollection};
 use crate::state::Metadata;
+use crate::{ExecuteMsg, QueryMsg, VipCollection};
 
 const CONTRACT_NAME: &str = "crates.io:stargaze-vip-collection";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -54,10 +56,10 @@ pub fn execute(
         }
         cw721_base::ExecuteMsg::RevokeAll { operator } => Err(ContractError::Unauthorized {}),
         cw721_base::ExecuteMsg::Mint {
-        token_id,
-        owner,
-        token_uri,
-        extension,
+            token_id,
+            owner,
+            token_uri,
+            extension,
         } => execute_mint(deps, env, info, token_id, owner, token_uri, extension),
         _ => VipCollection::default()
             .execute(deps, env, info, msg)
@@ -74,7 +76,8 @@ pub fn execute_mint(
     token_uri: Option<String>,
     extension: Metadata,
 ) -> Result<Response, ContractError> {
-    cw_ownable::assert_owner(deps.branch().storage, &info.sender).map_err(|_| ContractError::Unauthorized {})?;
+    cw_ownable::assert_owner(deps.branch().storage, &info.sender)
+        .map_err(|_| ContractError::Unauthorized {})?;
 
     let token = TokenInfo {
         owner: deps.api.addr_validate(&owner)?,
@@ -85,21 +88,19 @@ pub fn execute_mint(
     if !VipCollection::default().tokens.has(deps.storage, &token_id) {
         VipCollection::default().increment_tokens(deps.storage)?;
     }
-    VipCollection::default().tokens.update(deps.branch().storage, &token_id, |old| match old {
-        Some(_) => Ok::<TokenInfo<Metadata>, ContractError>(token),
-        None => {
-            Ok(token)
-        },
-    }
-        )?;
+    VipCollection::default()
+        .tokens
+        .update(deps.branch().storage, &token_id, |old| match old {
+            Some(_) => Ok::<TokenInfo<Metadata>, ContractError>(token),
+            None => Ok(token),
+        })?;
 
-        Ok(Response::new()
-           .add_attribute("action", "mint")
-           .add_attribute("minter", info.sender)
-           .add_attribute("owner", owner)
-           .add_attribute("token_id", token_id))
+    Ok(Response::new()
+        .add_attribute("action", "mint")
+        .add_attribute("minter", info.sender)
+        .add_attribute("owner", owner)
+        .add_attribute("token_id", token_id))
 }
-
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
