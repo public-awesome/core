@@ -3,13 +3,6 @@ use cosmwasm_schema::{cw_serde, QueryResponses};
 #[cw_serde]
 pub struct InstantiateMsg {
     pub collection_code_id: u64,
-    pub update_interval: u64, // in blocks
-}
-
-#[cw_serde]
-pub struct ConfigResponse {
-    pub vip_collection: String,
-    pub update_interval: u64,
 }
 
 #[cw_serde]
@@ -49,7 +42,7 @@ pub enum SudoMsg {
 #[derive(QueryResponses)]
 pub enum QueryMsg {
     #[returns(ConfigResponse)]
-    Config {},
+    Collection {},
     #[returns(bool)]
     IsPaused {},
     #[returns(u64)]

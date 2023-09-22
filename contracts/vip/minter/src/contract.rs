@@ -12,7 +12,7 @@ use cw721::TokensResponse;
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::state::{
-    increment_token_index, Config, CONFIG, PAUSED, TOKEN_INDEX, TOKEN_UPDATE_HEIGHT,
+    increment_token_index, COLLECTION, PAUSED, TOKEN_INDEX, TOKEN_UPDATE_HEIGHT,
 };
 
 const CONTRACT_NAME: &str = "crates.io:stargaze-vip-minter";
@@ -39,12 +39,9 @@ pub fn instantiate(
         .map_err(|_| StdError::generic_err("Could not calculate addr"))?;
     let collection = deps.api.addr_humanize(&canonical_addr)?;
 
-    CONFIG.save(
+    COLLECTION.save(
         deps.storage,
-        &Config {
-            vip_collection: deps.api.addr_validate(collection.as_str())?,
-            update_interval: msg.update_interval,
-        },
+        &deps.api.addr_validate(collection.as_str())?
     )?;
 
     PAUSED.save(deps.storage, &false)?;
