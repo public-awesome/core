@@ -78,10 +78,6 @@ pub fn execute(
         ExecuteMsg::Update { token_id } => execute_update(deps, env, info, token_id),
         ExecuteMsg::Pause {} => execute_pause(deps, info),
         ExecuteMsg::Resume {} => execute_resume(deps, info),
-        ExecuteMsg::UpdateConfig {
-            vip_collection,
-            update_interval,
-        } => execute_update_config(deps, info, vip_collection, update_interval),
     }
 }
 
@@ -92,7 +88,7 @@ pub fn execute_mint(
 ) -> Result<Response, ContractError> {
     ensure!(!PAUSED.load(deps.storage)?, ContractError::Paused {});
 
-    let Config { vip_collection, .. } = CONFIG.load(deps.storage)?;
+    let vip_collection = COLLECTION.load(deps.storage)?;
 
     let mint_msg = mint(
         deps.branch(),
@@ -116,18 +112,10 @@ pub fn execute_update(
     token_id: u64,
 ) -> Result<Response, ContractError> {
     ensure!(!PAUSED.load(deps.storage)?, ContractError::Paused {});
-    let Config {
-        vip_collection,
-        update_interval,
-        ..
-    } = CONFIG.load(deps.storage)?;
+    let vip_collection = COLLECTION.load(deps.storage)?;
 
     let last_update_height = TOKEN_UPDATE_HEIGHT.may_load(deps.storage, token_id)?;
-    if let Some(last_update_height) = last_update_height {
-        if env.block.height - last_update_height < update_interval {
-            return Err(ContractError::UpdateIntervalNotPassed {});
-        }
-    } else {
+    if last_update_height.is_none() {
         return Err(ContractError::TokenNotFound {});
     }
 
@@ -191,33 +179,6 @@ pub fn mint(
     })
 }
 
-pub fn execute_update_config(
-    deps: DepsMut,
-    info: MessageInfo,
-    vip_collection: Option<String>,
-    update_interval: Option<u64>,
-) -> Result<Response, ContractError> {
-    cw_ownable::assert_owner(deps.storage, &info.sender)
-        .map_err(|_| ContractError::Unauthorized {})?;
-
-    let mut config = CONFIG.load(deps.storage)?;
-    if let Some(vip_collection) = vip_collection {
-        config.vip_collection = deps.api.addr_validate(&vip_collection)?;
-    }
-    if let Some(update_interval) = update_interval {
-        // TODO: define a min and max for update_interval (and update the error)
-        if update_interval < 1 {
-            return Err(ContractError::InvalidUpdateInterval {});
-        }
-        config.update_interval = update_interval;
-    }
-    CONFIG.save(deps.storage, &config)?;
-    let event = Event::new("update_config")
-        .add_attribute("vip_collection", config.vip_collection)
-        .add_attribute("update_interval", config.update_interval.to_string());
-    Ok(Response::new().add_event(event))
-}
-
 pub fn execute_pause(deps: DepsMut, info: MessageInfo) -> Result<Response, ContractError> {
     cw_ownable::assert_owner(deps.storage, &info.sender)
         .map_err(|_| ContractError::Unauthorized {})?;
@@ -253,7 +214,7 @@ fn total_staked(deps: DepsMut, address: Addr) -> StdResult<Uint128> {
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::Config {} => to_binary(&CONFIG.load(deps.storage)?),
+        QueryMsg::Collection {} => to_binary(&COLLECTION.load(deps.storage)?.to_string()),
         QueryMsg::IsPaused {} => to_binary(&PAUSED.load(deps.storage)?),
         QueryMsg::TokenUpdateHeight { token_id } => {
             to_binary(&TOKEN_UPDATE_HEIGHT.load(deps.storage, token_id)?)

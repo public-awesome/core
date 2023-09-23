@@ -15,11 +15,6 @@ pub enum ExecuteMsg {
     Pause {},
     /// To resume paused operations
     Resume {},
-    /// Update the minter config params
-    UpdateConfig {
-        vip_collection: Option<String>,
-        update_interval: Option<u64>,
-    },
 }
 
 // #[allow(clippy::large_enum_variant)]
@@ -27,21 +22,12 @@ pub enum ExecuteMsg {
 pub enum SudoMsg {
     BeginBlock {}, // Is called by x/cron module BeginBlocker
     EndBlock {},   // Is called by x/cron module EndBlocker
-    // UpdateParams {
-    //     // fair_burn: Option<String>,
-    //     // trading_fee_percent: Option<Decimal>,
-    //     // min_bid_increment_percent: Option<Decimal>,
-    // },
-    UpdateConfig {
-        vip_collection: Option<String>,
-        update_interval: Option<u64>,
-    },
 }
 
 #[cw_serde]
 #[derive(QueryResponses)]
 pub enum QueryMsg {
-    #[returns(ConfigResponse)]
+    #[returns(String)]
     Collection {},
     #[returns(bool)]
     IsPaused {},
