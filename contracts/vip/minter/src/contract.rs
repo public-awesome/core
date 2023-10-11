@@ -135,7 +135,7 @@ pub fn execute_update(
     Ok(Response::new().add_message(mint_msg).add_event(event))
 }
 pub fn mint(
-    deps: DepsMut,
+    mut deps: DepsMut,
     sender: Addr,
     block_time: Timestamp,
     vip_collection: Addr,
@@ -162,12 +162,21 @@ pub fn mint(
         None => increment_token_index(deps.storage)?.to_string(),
     };
 
+    let staked_amount = total_staked(deps.branch(), sender.clone())?;
+    let tiers = TIERS.load(deps.storage)?;
+    let index = tiers
+        .iter()
+        .position(|&x| x >= staked_amount)
+        .unwrap_or(tiers.len());
+    let base_uri = BASE_URI.load(deps.storage)?;
+    let token_uri = Some(format!("{}/{}", base_uri, index));
+
     let msg = stargaze_vip_collection::ExecuteMsg::Mint {
         token_id: token_id_to_mint,
         owner: sender.to_string(),
-        token_uri: None,
+        token_uri,
         extension: stargaze_vip_collection::state::Metadata {
-            staked_amount: total_staked(deps, sender)?,
+            staked_amount,
             data: None,
             updated_at: block_time,
         },
