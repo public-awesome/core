@@ -13,13 +13,20 @@ pub enum ExecuteMsg {
     /// Mint a loyalty token for the given name
     Mint {},
     /// Update the stake amount for the given name
-    Update { token_id: u64 },
+    Update {
+        token_id: u64,
+    },
     /// So we can pause before migrating names, etc.
     Pause {},
     /// To resume paused operations
     Resume {},
     /// Update corresponding stake amounts for different tiers
-    UpdateTiers { tiers: Vec<Uint128> },
+    UpdateTiers {
+        tiers: Vec<Uint128>,
+    },
+    UpdateBaseURI {
+        base_uri: String,
+    },
 }
 
 // #[allow(clippy::large_enum_variant)]

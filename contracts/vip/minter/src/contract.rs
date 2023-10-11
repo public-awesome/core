@@ -79,6 +79,7 @@ pub fn execute(
         ExecuteMsg::Pause {} => execute_pause(deps, info),
         ExecuteMsg::Resume {} => execute_resume(deps, info),
         ExecuteMsg::UpdateTiers { tiers } => execute_update_tiers(deps, info, tiers),
+        ExecuteMsg::UpdateBaseURI { base_uri } => execute_update_base_uri(deps, info, base_uri),
     }
 }
 
@@ -205,6 +206,18 @@ pub fn execute_update_tiers(
             .collect::<Vec<String>>()
             .join(","),
     );
+    Ok(Response::new().add_event(event))
+}
+
+pub fn execute_update_base_uri(
+    deps: DepsMut,
+    info: MessageInfo,
+    base_uri: String,
+) -> Result<Response, ContractError> {
+    cw_ownable::assert_owner(deps.storage, &info.sender)
+        .map_err(|_| ContractError::Unauthorized {})?;
+    BASE_URI.save(deps.storage, &base_uri)?;
+    let event = Event::new("update_base_uri").add_attribute("base_uri", base_uri);
     Ok(Response::new().add_event(event))
 }
 
