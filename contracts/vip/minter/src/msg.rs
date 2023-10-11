@@ -1,8 +1,11 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
+use cosmwasm_std::Uint128;
 
 #[cw_serde]
 pub struct InstantiateMsg {
     pub collection_code_id: u64,
+    pub tiers: Vec<Uint128>,
+    pub base_uri: String,
 }
 
 #[cw_serde]
@@ -15,6 +18,8 @@ pub enum ExecuteMsg {
     Pause {},
     /// To resume paused operations
     Resume {},
+    /// Update corresponding stake amounts for different tiers
+    UpdateTiers { tiers: Vec<Uint128> },
 }
 
 // #[allow(clippy::large_enum_variant)]
@@ -33,4 +38,8 @@ pub enum QueryMsg {
     IsPaused {},
     #[returns(u64)]
     TokenUpdateHeight { token_id: u64 },
+    #[returns(u64)]
+    Tier { address: String },
+    #[returns(Vec<Uint128>)]
+    Tiers {},
 }

@@ -4,7 +4,6 @@ members = [
     "contracts/fair-burn",
     "contracts/vip/collection",
     "contracts/vip/minter",
-    "contracts/vip/program",
     "test/*",
 ]
 resolver = "2"

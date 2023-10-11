@@ -12,8 +12,9 @@ use cw721::TokensResponse;
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::state::{
-    increment_token_index, COLLECTION, PAUSED, TOKEN_INDEX, TOKEN_UPDATE_HEIGHT,
+    increment_token_index, BASE_URI, COLLECTION, PAUSED, TIERS, TOKEN_INDEX, TOKEN_UPDATE_HEIGHT,
 };
+use stargaze_vip_collection::state::Metadata;
 
 const CONTRACT_NAME: &str = "crates.io:stargaze-vip-minter";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -28,6 +29,8 @@ pub fn instantiate(
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
     cw_ownable::initialize_owner(deps.storage, deps.api, Some(info.sender.as_str()))?;
     let minter = env.contract.address;
+    BASE_URI.save(deps.storage, &msg.base_uri)?;
+    TIERS.save(deps.storage, &msg.tiers)?;
 
     let canonical_creator = deps.api.addr_canonicalize(minter.as_str())?;
     let CodeInfoResponse { checksum, .. } =
@@ -39,10 +42,7 @@ pub fn instantiate(
         .map_err(|_| StdError::generic_err("Could not calculate addr"))?;
     let collection = deps.api.addr_humanize(&canonical_addr)?;
 
-    COLLECTION.save(
-        deps.storage,
-        &deps.api.addr_validate(collection.as_str())?
-    )?;
+    COLLECTION.save(deps.storage, &deps.api.addr_validate(collection.as_str())?)?;
 
     PAUSED.save(deps.storage, &false)?;
 
@@ -78,6 +78,7 @@ pub fn execute(
         ExecuteMsg::Update { token_id } => execute_update(deps, env, info, token_id),
         ExecuteMsg::Pause {} => execute_pause(deps, info),
         ExecuteMsg::Resume {} => execute_resume(deps, info),
+        ExecuteMsg::UpdateTiers { tiers } => execute_update_tiers(deps, info, tiers),
     }
 }
 
@@ -179,6 +180,25 @@ pub fn mint(
     })
 }
 
+pub fn execute_update_tiers(
+    deps: DepsMut,
+    info: MessageInfo,
+    tiers: Vec<Uint128>,
+) -> Result<Response, ContractError> {
+    cw_ownable::assert_owner(deps.storage, &info.sender)
+        .map_err(|_| ContractError::Unauthorized {})?;
+    TIERS.save(deps.storage, &tiers)?;
+    let event = Event::new("update_tiers").add_attribute(
+        "tiers",
+        tiers
+            .iter()
+            .map(|x| x.to_string())
+            .collect::<Vec<String>>()
+            .join(","),
+    );
+    Ok(Response::new().add_event(event))
+}
+
 pub fn execute_pause(deps: DepsMut, info: MessageInfo) -> Result<Response, ContractError> {
     cw_ownable::assert_owner(deps.storage, &info.sender)
         .map_err(|_| ContractError::Unauthorized {})?;
@@ -218,6 +238,40 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::IsPaused {} => to_binary(&PAUSED.load(deps.storage)?),
         QueryMsg::TokenUpdateHeight { token_id } => {
             to_binary(&TOKEN_UPDATE_HEIGHT.load(deps.storage, token_id)?)
+        }
+        QueryMsg::Tier { address } => {
+            let tokens_response: cw721::TokensResponse = deps.querier.query_wasm_smart(
+                COLLECTION.load(deps.storage)?,
+                &cw721::Cw721QueryMsg::Tokens {
+                    owner: address,
+                    start_after: None,
+                    limit: None,
+                },
+            )?;
+            let token_id = tokens_response
+                .tokens
+                .first()
+                .ok_or_else(|| StdError::generic_err("No token found for address"))?;
+
+            let token_info: cw721::NftInfoResponse<Metadata> = deps.querier.query_wasm_smart(
+                COLLECTION.load(deps.storage)?,
+                &cw721::Cw721QueryMsg::NftInfo {
+                    token_id: token_id.to_string(),
+                },
+            )?;
+            let staked_amount = token_info.extension.staked_amount;
+
+            let tiers = TIERS.load(deps.storage)?;
+            let index = tiers
+                .iter()
+                .position(|&x| x >= staked_amount)
+                .unwrap_or(tiers.len());
+
+            Ok(to_binary(&index)?)
+        }
+        QueryMsg::Tiers {} => {
+            let tiers = TIERS.load(deps.storage)?;
+            Ok(to_binary(&tiers)?)
         }
     }
 }
