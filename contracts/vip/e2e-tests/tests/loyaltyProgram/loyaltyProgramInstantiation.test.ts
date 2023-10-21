@@ -3,7 +3,6 @@ import { fromHex } from '@cosmjs/encoding'
 import chainConfig from '../../configs/chain_config.json'
 import Context, { CONTRACT_MAP } from '../setup/context'
 import { readChecksumFile } from '../utils/file'
-import { sha256 } from 'js-sha256'
 import _ from 'lodash'
 import path from 'path'
 
@@ -27,7 +26,6 @@ describe('LoyaltyProgramInstantiation', () => {
     const checksumFilePath = path.join(chainConfig.artifacts_path, 'checksums.txt')
     const checksum = await readChecksumFile(checksumFilePath, 'stargaze_vip_collection.wasm')
     const checksumUint8Array = fromHex(checksum)
-    // convert "vip_collection1" to uint8 array to be used as salt
     const salt = new TextEncoder().encode('vip_collection1')
     const address2 = instantiate2Address(checksumUint8Array, vipMinter, salt, 'stars')
 
