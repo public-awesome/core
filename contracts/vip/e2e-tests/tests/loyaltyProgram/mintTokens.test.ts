@@ -1,7 +1,7 @@
 import { CosmWasmClient } from '@cosmjs/cosmwasm-stargate'
 import { toUtf8 } from '@cosmjs/encoding'
 import { denom } from '../../configs/chain_config.json'
-import Context, { CONTRACT_MAP } from '../setup/context'
+import Context, { CONTRACT_MAP, TestUser } from '../setup/context'
 import { getQueryClient } from '../utils/client'
 import { ArrayOfUint128, ExecuteMsg as MinterExecuteMsg } from '../types/minter.types'
 import { ExecuteMsg as CollectionExecuteMsg } from '../types/collection.types'
@@ -9,7 +9,7 @@ import { MinterQueryClient } from '../types/minter.client'
 import { CollectionQueryClient } from '../types/collection.client'
 import { MsgExecuteContract } from 'cosmjs-types/cosmwasm/wasm/v1/tx'
 import _ from 'lodash'
-
+import { coin } from '@cosmjs/proto-signing'
 
 describe('Mint Loyalty Program Tokens', () => {
   const userOne = 'user1'
@@ -20,6 +20,7 @@ describe('Mint Loyalty Program Tokens', () => {
   let minterQueryClient: MinterQueryClient
   let minterAddress: string
   let tiers: ArrayOfUint128
+  let testUserOne: TestUser
 
   beforeAll(async () => {
     context = new Context()
@@ -27,22 +28,24 @@ describe('Mint Loyalty Program Tokens', () => {
     minterAddress = context.getContractAddress(CONTRACT_MAP.VIP_MINTER)
 
     queryClient = await getQueryClient()
-    
-    minterQueryClient = new MinterQueryClient(
-      queryClient,
-      minterAddress,
-    )
+
+    minterQueryClient = new MinterQueryClient(queryClient, minterAddress)
     tiers = await minterQueryClient.tiers()
+    testUserOne = context.getTestUser(userOne)
   })
 
   test('Mint Initial Token', async () => {
-    const testUserOne = context.getTestUser(userOne)
-
     const mintMsg: MinterExecuteMsg = {
       mint: {},
     }
 
-    const executionResult = await testUserOne.client.execute(testUserOne.address, minterAddress, mintMsg, "auto", "mint loyalty program token")
+    const executionResult = await testUserOne.client.execute(
+      testUserOne.address,
+      minterAddress,
+      mintMsg,
+      'auto',
+      'mint loyalty program token',
+    )
 
     _.forEach(executionResult.events, (event) => {
       if (event.type === 'wasm') {
@@ -52,8 +55,49 @@ describe('Mint Loyalty Program Tokens', () => {
       }
     })
 
-    const userOneTier = await minterQueryClient.tier({ address: testUserOne.address })
+    let userOneTier = await minterQueryClient.tier({ address: testUserOne.address })
     expect(userOneTier).toBe(0)
   })
 
+  test('Update Token', async () => {
+    await testUserOne.client.delegateTokens(
+      testUserOne.address,
+      'starsvaloper1jt9w26mpxxjsk63mvd4m2ynj0af09cslura0ec',
+      coin(1000, 'ustars'),
+      'auto',
+      'delegate tokens',
+    )
+
+    const updateMsg: MinterExecuteMsg = {
+      update: {
+        token_id: 1,
+      }
+    }
+
+    await testUserOne.client.execute(
+      testUserOne.address,
+      minterAddress,
+      updateMsg,
+      'auto',
+      'update token',
+    )
+    
+    let userOneTier = await minterQueryClient.tier({ address: testUserOne.address })
+    expect(userOneTier).toBe(1)
+  })
+
+  test('Fail to Mint Duplicate Tokens', async () => {
+    const mintMsg: MinterExecuteMsg = {
+      mint: {},
+    }
+
+    await expect(testUserOne.client.execute(
+      testUserOne.address,
+      minterAddress,
+      mintMsg,
+      'auto',
+      'mint loyalty program token',
+    )).rejects.toThrowError(/AlreadyMinted/)
+  }
+  )
 })
