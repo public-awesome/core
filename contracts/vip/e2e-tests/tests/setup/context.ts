@@ -6,6 +6,7 @@ import assert from 'assert'
 import fs from 'fs'
 import _ from 'lodash'
 import path from 'path'
+import { StakedTokensAPIResponse } from '../utils/stake'
 
 export const CONTRACT_MAP = {
   // loyalty program artifacts
@@ -69,24 +70,41 @@ export default class Context {
   private instantiateLoyaltyProgramContracts = async () => {
     let { client, address: sender } = this.getTestUser('user1')
 
+    const stakedTokensResponse: Response = await fetch(
+      `https://rest.elgafar-1.stargaze-apis.com/cosmos/staking/v1beta1/delegations/${sender}`,
+    )
+    const stakedTokens: StakedTokensAPIResponse = await stakedTokensResponse.json()
+    const initialStakedAmount = parseInt(stakedTokens.delegation_responses[0]?.balance?.amount || '0')
+    console.log(`Initial staked amount: ${initialStakedAmount}`)
+
     // Instantiate Loyalty Program Minter
     let vipMinterInstantiateMessage = {
       collection_code_id: this.codeIds[CONTRACT_MAP.VIP_COLLECTION],
-      tiers: ["10000000000","2000000000","3000000000"],
-      base_uri: "ipfs://test",
+      tiers: [
+        (initialStakedAmount + 999).toString(),
+        (initialStakedAmount + 1999).toString(),
+        (initialStakedAmount + 2999).toString(),
+      ],
+      base_uri: 'ipfs://test',
     }
 
-    let instantiateResult = await client.instantiate(sender, this.codeIds[CONTRACT_MAP.VIP_MINTER], vipMinterInstantiateMessage, CONTRACT_MAP.VIP_MINTER, 'auto')
-    
+    let instantiateResult = await client.instantiate(
+      sender,
+      this.codeIds[CONTRACT_MAP.VIP_MINTER],
+      vipMinterInstantiateMessage,
+      CONTRACT_MAP.VIP_MINTER,
+      'auto',
+    )
+
     _.forEach(instantiateResult.events, (event) => {
-          if (event.type === 'instantiate') {
-            let codeId = parseInt(event.attributes[1].value, 10)
-            let contractKey = this.getContractKeyByCodeId(codeId)
-            assert(contractKey, 'contract address not found in wasm event attributes')
-            console.log(`Instantiated ${contractKey} contract with address ${event.attributes[0].value}`)
-            this.addContractAddress(contractKey, event.attributes[0].value)
-          }
-        })
+      if (event.type === 'instantiate') {
+        let codeId = parseInt(event.attributes[1].value, 10)
+        let contractKey = this.getContractKeyByCodeId(codeId)
+        assert(contractKey, 'contract address not found in wasm event attributes')
+        console.log(`Instantiated ${contractKey} contract with address ${event.attributes[0].value}`)
+        this.addContractAddress(contractKey, event.attributes[0].value)
+      }
+    })
   }
 
   private writeContext = () => {

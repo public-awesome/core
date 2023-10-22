@@ -6,7 +6,7 @@ import { readChecksumFile } from '../utils/file'
 import _ from 'lodash'
 import path from 'path'
 
-describe('LoyaltyProgramInstantiation', () => {
+describe('instantiation', () => {
   let context: Context
 
   beforeAll(async () => {
