@@ -6,14 +6,89 @@
 
 import { CosmWasmClient, SigningCosmWasmClient, ExecuteResult } from "@cosmjs/cosmwasm-stargate";
 import { Coin, StdFee } from "@cosmjs/amino";
-import { InstantiateMsg, ExecuteMsg, Binary, Expiration, Timestamp, Uint64, Uint128, Action, Metadata, Empty, QueryMsg } from "./collection.types";
+import { InstantiateMsg, ExecuteMsg, Binary, Expiration, Timestamp, Uint64, Uint128, Action, Metadata, Empty, QueryMsg, AllNftInfoResponseForEmpty, OwnerOfResponse, Approval, NftInfoResponseForEmpty, OperatorsResponse, TokensResponse, ApprovalResponse, ApprovalsResponse, ContractInfoResponse, Null, MinterResponse, NumTokensResponse, OperatorResponse, OwnershipForString } from "./collection.types";
 export interface CollectionReadOnlyInterface {
   contractAddress: string;
-  metadata: ({
+  ownerOf: ({
+    includeExpired,
+    tokenId
+  }: {
+    includeExpired?: boolean;
+    tokenId: string;
+  }) => Promise<OwnerOfResponse>;
+  approval: ({
+    includeExpired,
+    spender,
+    tokenId
+  }: {
+    includeExpired?: boolean;
+    spender: string;
+    tokenId: string;
+  }) => Promise<ApprovalResponse>;
+  approvals: ({
+    includeExpired,
+    tokenId
+  }: {
+    includeExpired?: boolean;
+    tokenId: string;
+  }) => Promise<ApprovalsResponse>;
+  operator: ({
+    includeExpired,
+    operator,
+    owner
+  }: {
+    includeExpired?: boolean;
+    operator: string;
+    owner: string;
+  }) => Promise<OperatorResponse>;
+  allOperators: ({
+    includeExpired,
+    limit,
+    owner,
+    startAfter
+  }: {
+    includeExpired?: boolean;
+    limit?: number;
+    owner: string;
+    startAfter?: string;
+  }) => Promise<OperatorsResponse>;
+  numTokens: () => Promise<NumTokensResponse>;
+  contractInfo: () => Promise<ContractInfoResponse>;
+  nftInfo: ({
     tokenId
   }: {
     tokenId: string;
-  }) => Promise<Metadata>;
+  }) => Promise<NftInfoResponseForEmpty>;
+  allNftInfo: ({
+    includeExpired,
+    tokenId
+  }: {
+    includeExpired?: boolean;
+    tokenId: string;
+  }) => Promise<AllNftInfoResponseForEmpty>;
+  tokens: ({
+    limit,
+    owner,
+    startAfter
+  }: {
+    limit?: number;
+    owner: string;
+    startAfter?: string;
+  }) => Promise<TokensResponse>;
+  allTokens: ({
+    limit,
+    startAfter
+  }: {
+    limit?: number;
+    startAfter?: string;
+  }) => Promise<TokensResponse>;
+  minter: () => Promise<MinterResponse>;
+  extension: ({
+    msg
+  }: {
+    msg: Empty;
+  }) => Promise<Null>;
+  ownership: () => Promise<OwnershipForString>;
 }
 export class CollectionQueryClient implements CollectionReadOnlyInterface {
   client: CosmWasmClient;
@@ -22,22 +97,193 @@ export class CollectionQueryClient implements CollectionReadOnlyInterface {
   constructor(client: CosmWasmClient, contractAddress: string) {
     this.client = client;
     this.contractAddress = contractAddress;
-    this.metadata = this.metadata.bind(this);
+    this.ownerOf = this.ownerOf.bind(this);
+    this.approval = this.approval.bind(this);
+    this.approvals = this.approvals.bind(this);
+    this.operator = this.operator.bind(this);
+    this.allOperators = this.allOperators.bind(this);
+    this.numTokens = this.numTokens.bind(this);
+    this.contractInfo = this.contractInfo.bind(this);
+    this.nftInfo = this.nftInfo.bind(this);
+    this.allNftInfo = this.allNftInfo.bind(this);
+    this.tokens = this.tokens.bind(this);
+    this.allTokens = this.allTokens.bind(this);
+    this.minter = this.minter.bind(this);
+    this.extension = this.extension.bind(this);
+    this.ownership = this.ownership.bind(this);
   }
 
-  metadata = async ({
+  ownerOf = async ({
+    includeExpired,
     tokenId
   }: {
+    includeExpired?: boolean;
     tokenId: string;
-  }): Promise<Metadata> => {
+  }): Promise<OwnerOfResponse> => {
     return this.client.queryContractSmart(this.contractAddress, {
-      metadata: {
+      owner_of: {
+        include_expired: includeExpired,
         token_id: tokenId
       }
     });
   };
+  approval = async ({
+    includeExpired,
+    spender,
+    tokenId
+  }: {
+    includeExpired?: boolean;
+    spender: string;
+    tokenId: string;
+  }): Promise<ApprovalResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      approval: {
+        include_expired: includeExpired,
+        spender,
+        token_id: tokenId
+      }
+    });
+  };
+  approvals = async ({
+    includeExpired,
+    tokenId
+  }: {
+    includeExpired?: boolean;
+    tokenId: string;
+  }): Promise<ApprovalsResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      approvals: {
+        include_expired: includeExpired,
+        token_id: tokenId
+      }
+    });
+  };
+  operator = async ({
+    includeExpired,
+    operator,
+    owner
+  }: {
+    includeExpired?: boolean;
+    operator: string;
+    owner: string;
+  }): Promise<OperatorResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      operator: {
+        include_expired: includeExpired,
+        operator,
+        owner
+      }
+    });
+  };
+  allOperators = async ({
+    includeExpired,
+    limit,
+    owner,
+    startAfter
+  }: {
+    includeExpired?: boolean;
+    limit?: number;
+    owner: string;
+    startAfter?: string;
+  }): Promise<OperatorsResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      all_operators: {
+        include_expired: includeExpired,
+        limit,
+        owner,
+        start_after: startAfter
+      }
+    });
+  };
+  numTokens = async (): Promise<NumTokensResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      num_tokens: {}
+    });
+  };
+  contractInfo = async (): Promise<ContractInfoResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      contract_info: {}
+    });
+  };
+  nftInfo = async ({
+    tokenId
+  }: {
+    tokenId: string;
+  }): Promise<NftInfoResponseForEmpty> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      nft_info: {
+        token_id: tokenId
+      }
+    });
+  };
+  allNftInfo = async ({
+    includeExpired,
+    tokenId
+  }: {
+    includeExpired?: boolean;
+    tokenId: string;
+  }): Promise<AllNftInfoResponseForEmpty> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      all_nft_info: {
+        include_expired: includeExpired,
+        token_id: tokenId
+      }
+    });
+  };
+  tokens = async ({
+    limit,
+    owner,
+    startAfter
+  }: {
+    limit?: number;
+    owner: string;
+    startAfter?: string;
+  }): Promise<TokensResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      tokens: {
+        limit,
+        owner,
+        start_after: startAfter
+      }
+    });
+  };
+  allTokens = async ({
+    limit,
+    startAfter
+  }: {
+    limit?: number;
+    startAfter?: string;
+  }): Promise<TokensResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      all_tokens: {
+        limit,
+        start_after: startAfter
+      }
+    });
+  };
+  minter = async (): Promise<MinterResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      minter: {}
+    });
+  };
+  extension = async ({
+    msg
+  }: {
+    msg: Empty;
+  }): Promise<Null> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      extension: {
+        msg
+      }
+    });
+  };
+  ownership = async (): Promise<OwnershipForString> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      ownership: {}
+    });
+  };
 }
-export interface CollectionInterface extends CollectionReadOnlyInterface {
+export interface CollectionInterface {
   contractAddress: string;
   sender: string;
   transferNft: ({
@@ -107,13 +353,12 @@ export interface CollectionInterface extends CollectionReadOnlyInterface {
   }, fee?: number | StdFee | "auto", memo?: string, _funds?: Coin[]) => Promise<ExecuteResult>;
   updateOwnership: (action: Action, fee?: number | StdFee | "auto", memo?: string, _funds?: Coin[]) => Promise<ExecuteResult>;
 }
-export class CollectionClient extends CollectionQueryClient implements CollectionInterface {
+export class CollectionClient implements CollectionInterface {
   client: SigningCosmWasmClient;
   sender: string;
   contractAddress: string;
 
   constructor(client: SigningCosmWasmClient, sender: string, contractAddress: string) {
-    super(client, contractAddress);
     this.client = client;
     this.sender = sender;
     this.contractAddress = contractAddress;

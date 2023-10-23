@@ -84,7 +84,111 @@ export interface Empty {
   [k: string]: unknown;
 }
 export type QueryMsg = {
-  metadata: {
+  owner_of: {
+    include_expired?: boolean | null;
     token_id: string;
   };
+} | {
+  approval: {
+    include_expired?: boolean | null;
+    spender: string;
+    token_id: string;
+  };
+} | {
+  approvals: {
+    include_expired?: boolean | null;
+    token_id: string;
+  };
+} | {
+  operator: {
+    include_expired?: boolean | null;
+    operator: string;
+    owner: string;
+  };
+} | {
+  all_operators: {
+    include_expired?: boolean | null;
+    limit?: number | null;
+    owner: string;
+    start_after?: string | null;
+  };
+} | {
+  num_tokens: {};
+} | {
+  contract_info: {};
+} | {
+  nft_info: {
+    token_id: string;
+  };
+} | {
+  all_nft_info: {
+    include_expired?: boolean | null;
+    token_id: string;
+  };
+} | {
+  tokens: {
+    limit?: number | null;
+    owner: string;
+    start_after?: string | null;
+  };
+} | {
+  all_tokens: {
+    limit?: number | null;
+    start_after?: string | null;
+  };
+} | {
+  minter: {};
+} | {
+  extension: {
+    msg: Empty;
+  };
+} | {
+  ownership: {};
 };
+export interface AllNftInfoResponseForEmpty {
+  access: OwnerOfResponse;
+  info: NftInfoResponseForEmpty;
+}
+export interface OwnerOfResponse {
+  approvals: Approval[];
+  owner: string;
+}
+export interface Approval {
+  expires: Expiration;
+  spender: string;
+}
+export interface NftInfoResponseForEmpty {
+  extension: Empty;
+  token_uri?: string | null;
+}
+export interface OperatorsResponse {
+  operators: Approval[];
+}
+export interface TokensResponse {
+  tokens: string[];
+}
+export interface ApprovalResponse {
+  approval: Approval;
+}
+export interface ApprovalsResponse {
+  approvals: Approval[];
+}
+export interface ContractInfoResponse {
+  name: string;
+  symbol: string;
+}
+export type Null = null;
+export interface MinterResponse {
+  minter?: string | null;
+}
+export interface NumTokensResponse {
+  count: number;
+}
+export interface OperatorResponse {
+  approval: Approval;
+}
+export interface OwnershipForString {
+  owner?: string | null;
+  pending_expiry?: Expiration | null;
+  pending_owner?: string | null;
+}
