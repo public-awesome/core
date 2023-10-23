@@ -153,7 +153,7 @@ pub fn mint(
                 include_expired: None,
             },
         )?;
-        owner = all_nft_info_response.access.owner.to_string();
+        owner = all_nft_info_response.access.owner;
     } else {
         // ensure that the sender did not mint any tokens yet
         let tokens_response: TokensResponse = deps.querier.query_wasm_smart(
@@ -172,7 +172,7 @@ pub fn mint(
     }
 
     let owner_addr = deps.api.addr_validate(&owner)?;
-    let staked_amount = total_staked(deps.branch(), owner_addr.clone())?;
+    let staked_amount = total_staked(deps.branch(), owner_addr)?;
     let tiers = TIERS.load(deps.storage)?;
     let index = tiers
         .iter()
