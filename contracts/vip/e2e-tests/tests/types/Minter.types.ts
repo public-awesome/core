@@ -25,7 +25,7 @@ export type ExecuteMsg = {
     tiers: Uint128[];
   };
 } | {
-  update_base_u_r_i: {
+  update_base_uri: {
     base_uri: string;
   };
 };

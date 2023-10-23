@@ -91,7 +91,7 @@ export interface MinterInterface extends MinterReadOnlyInterface {
   }: {
     tiers: Uint128[];
   }, fee?: number | StdFee | "auto", memo?: string, _funds?: Coin[]) => Promise<ExecuteResult>;
-  updateBaseURI: ({
+  updateBaseUri: ({
     baseUri
   }: {
     baseUri: string;
@@ -112,7 +112,7 @@ export class MinterClient extends MinterQueryClient implements MinterInterface {
     this.pause = this.pause.bind(this);
     this.resume = this.resume.bind(this);
     this.updateTiers = this.updateTiers.bind(this);
-    this.updateBaseURI = this.updateBaseURI.bind(this);
+    this.updateBaseUri = this.updateBaseUri.bind(this);
   }
 
   mint = async (fee: number | StdFee | "auto" = "auto", memo?: string, _funds?: Coin[]): Promise<ExecuteResult> => {
@@ -152,13 +152,13 @@ export class MinterClient extends MinterQueryClient implements MinterInterface {
       }
     }, fee, memo, _funds);
   };
-  updateBaseURI = async ({
+  updateBaseUri = async ({
     baseUri
   }: {
     baseUri: string;
   }, fee: number | StdFee | "auto" = "auto", memo?: string, _funds?: Coin[]): Promise<ExecuteResult> => {
     return await this.client.execute(this.sender, this.contractAddress, {
-      update_base_u_r_i: {
+      update_base_uri: {
         base_uri: baseUri
       }
     }, fee, memo, _funds);
