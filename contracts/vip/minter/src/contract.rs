@@ -163,7 +163,10 @@ pub fn mint(
         token_id_to_mint = token_id.unwrap().to_string();
         let all_nft_info_response: AllNftInfoResponse<Metadata> = deps.querier.query_wasm_smart(
             vip_collection.clone(),
-            &cw721_base::msg::QueryMsg::<AllNftInfoResponse<Metadata>>::AllNftInfo { token_id: token_id_to_mint.clone(), include_expired: None }
+            &cw721_base::msg::QueryMsg::<AllNftInfoResponse<Metadata>>::AllNftInfo {
+                token_id: token_id_to_mint.clone(),
+                include_expired: None,
+            },
         )?;
         owner = all_nft_info_response.access.owner.to_string();
     }
