@@ -144,7 +144,17 @@ pub fn mint(
 ) -> Result<WasmMsg, ContractError> {
     let token_id_to_mint: String;
     let mut owner: String = sender.to_string();
-    if token_id.is_none() {
+    if let Some(token_id) = token_id {
+        token_id_to_mint = token_id.to_string();
+        let all_nft_info_response: AllNftInfoResponse<Metadata> = deps.querier.query_wasm_smart(
+            vip_collection.clone(),
+            &cw721_base::msg::QueryMsg::<AllNftInfoResponse<Metadata>>::AllNftInfo {
+                token_id: token_id_to_mint.clone(),
+                include_expired: None,
+            },
+        )?;
+        owner = all_nft_info_response.access.owner.to_string();
+    } else {
         // ensure that the sender did not mint any tokens yet
         let tokens_response: TokensResponse = deps.querier.query_wasm_smart(
             vip_collection.clone(),
@@ -159,16 +169,6 @@ pub fn mint(
             ContractError::AlreadyMinted {}
         );
         token_id_to_mint = increment_token_index(deps.storage)?.to_string();
-    } else {
-        token_id_to_mint = token_id.unwrap().to_string();
-        let all_nft_info_response: AllNftInfoResponse<Metadata> = deps.querier.query_wasm_smart(
-            vip_collection.clone(),
-            &cw721_base::msg::QueryMsg::<AllNftInfoResponse<Metadata>>::AllNftInfo {
-                token_id: token_id_to_mint.clone(),
-                include_expired: None,
-            },
-        )?;
-        owner = all_nft_info_response.access.owner.to_string();
     }
 
     let owner_addr = deps.api.addr_validate(&owner)?;
