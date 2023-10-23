@@ -7,7 +7,7 @@ use cosmwasm_std::{
     Event, MessageInfo, Response, StdError, StdResult, Timestamp, Uint128, WasmMsg,
 };
 use cw2::set_contract_version;
-use cw721::TokensResponse;
+use cw721::{AllNftInfoResponse, TokensResponse};
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
@@ -142,6 +142,8 @@ pub fn mint(
     vip_collection: Addr,
     token_id: Option<u64>,
 ) -> Result<WasmMsg, ContractError> {
+    let token_id_to_mint: String;
+    let mut owner: String = sender.to_string();
     if token_id.is_none() {
         // ensure that the sender did not mint any tokens yet
         let tokens_response: TokensResponse = deps.querier.query_wasm_smart(
@@ -156,14 +158,18 @@ pub fn mint(
             tokens_response.tokens.is_empty(),
             ContractError::AlreadyMinted {}
         );
+        token_id_to_mint = increment_token_index(deps.storage)?.to_string();
+    } else {
+        token_id_to_mint = token_id.unwrap().to_string();
+        let all_nft_info_response: AllNftInfoResponse<Metadata> = deps.querier.query_wasm_smart(
+            vip_collection.clone(),
+            &cw721_base::msg::QueryMsg::<AllNftInfoResponse<Metadata>>::AllNftInfo { token_id: token_id_to_mint.clone(), include_expired: None }
+        )?;
+        owner = all_nft_info_response.access.owner.to_string();
     }
 
-    let token_id_to_mint = match token_id {
-        Some(id) => id.to_string(), // to be used for updates
-        None => increment_token_index(deps.storage)?.to_string(),
-    };
-
-    let staked_amount = total_staked(deps.branch(), sender.clone())?;
+    let owner_addr = deps.api.addr_validate(&owner)?;
+    let staked_amount = total_staked(deps.branch(), owner_addr.clone())?;
     let tiers = TIERS.load(deps.storage)?;
     let index = tiers
         .iter()
@@ -174,7 +180,7 @@ pub fn mint(
 
     let msg = stargaze_vip_collection::ExecuteMsg::Mint {
         token_id: token_id_to_mint,
-        owner: sender.to_string(),
+        owner,
         token_uri,
         extension: stargaze_vip_collection::state::Metadata {
             staked_amount,
