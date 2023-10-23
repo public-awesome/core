@@ -24,7 +24,7 @@ pub enum ExecuteMsg {
     UpdateTiers {
         tiers: Vec<Uint128>,
     },
-    UpdateBaseURI {
+    UpdateBaseUri {
         base_uri: String,
     },
 }

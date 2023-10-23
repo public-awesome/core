@@ -79,7 +79,7 @@ pub fn execute(
         ExecuteMsg::Pause {} => execute_pause(deps, info),
         ExecuteMsg::Resume {} => execute_resume(deps, info),
         ExecuteMsg::UpdateTiers { tiers } => execute_update_tiers(deps, info, tiers),
-        ExecuteMsg::UpdateBaseURI { base_uri } => execute_update_base_uri(deps, info, base_uri),
+        ExecuteMsg::UpdateBaseUri { base_uri } => execute_update_base_uri(deps, info, base_uri),
     }
 }
 
