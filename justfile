@@ -40,6 +40,9 @@ deploy-local-arm:
 e2e-test: deploy-local
 	RUST_LOG=info CONFIG=configs/cosm-orc.yaml RUST_BACKTRACE=1 cargo e2e-test
 
+e2e-test-loyalty-program:
+	cd contracts/vip/e2e-tests && yarn install && yarn test && cd ../../..
+
 e2e-test-arm: deploy-local-arm
 	RUST_LOG=info CONFIG=configs/cosm-orc.yaml RUST_BACKTRACE=1 cargo e2e-test
 
