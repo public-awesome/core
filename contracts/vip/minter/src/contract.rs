@@ -26,6 +26,7 @@ pub fn instantiate(
     info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
+    check_tier_order(&msg.tiers)?;
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
     cw_ownable::initialize_owner(deps.storage, deps.api, Some(info.sender.as_str()))?;
     let minter = env.contract.address;
@@ -219,6 +220,7 @@ pub fn execute_update_tiers(
     info: MessageInfo,
     tiers: Vec<Uint128>,
 ) -> Result<Response, ContractError> {
+    check_tier_order(&tiers)?;
     cw_ownable::assert_owner(deps.storage, &info.sender)
         .map_err(|_| ContractError::Unauthorized {})?;
     TIERS.save(deps.storage, &tiers)?;
@@ -275,6 +277,17 @@ fn total_staked(deps: DepsMut, address: Addr) -> StdResult<Uint128> {
         .fold(0, |acc, d| acc + d.amount.amount.u128());
 
     Ok(Uint128::from(total))
+}
+
+fn check_tier_order(tiers: &[Uint128]) -> StdResult<()> {
+    let mut prev = Uint128::zero();
+    for tier in tiers {
+        if *tier <= prev {
+            return Err(StdError::generic_err("Tiers must be in ascending order"));
+        }
+        prev = *tier;
+    }
+    Ok(())
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
