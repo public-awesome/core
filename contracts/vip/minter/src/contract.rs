@@ -92,13 +92,7 @@ pub fn execute_mint(
 
     let vip_collection = COLLECTION.load(deps.storage)?;
 
-    let mint_msg = mint(
-        deps.branch(),
-        info.sender,
-        env.block.time,
-        vip_collection,
-        None,
-    )?;
+    let mint_msg = mint(deps.branch(), info.sender, env.block.time, vip_collection)?;
     let token_id = TOKEN_INDEX.load(deps.storage)?;
     TOKEN_UPDATE_HEIGHT.update(deps.storage, token_id, |_| -> StdResult<_> {
         Ok(env.block.height)
@@ -110,7 +104,7 @@ pub fn execute_mint(
 pub fn execute_update(
     mut deps: DepsMut,
     env: Env,
-    info: MessageInfo,
+    _info: MessageInfo,
     token_id: u64,
 ) -> Result<Response, ContractError> {
     ensure!(!PAUSED.load(deps.storage)?, ContractError::Paused {});
@@ -121,13 +115,7 @@ pub fn execute_update(
         return Err(ContractError::TokenNotFound {});
     }
 
-    let mint_msg = mint(
-        deps.branch(),
-        info.sender,
-        env.block.time,
-        vip_collection,
-        Some(token_id),
-    )?;
+    let mint_msg = update(deps.branch(), env.block.time, vip_collection, token_id)?;
 
     TOKEN_UPDATE_HEIGHT.update(deps.storage, token_id, |_| -> StdResult<_> {
         Ok(env.block.height)
@@ -140,38 +128,22 @@ pub fn mint(
     sender: Addr,
     block_time: Timestamp,
     vip_collection: Addr,
-    token_id: Option<u64>,
 ) -> Result<WasmMsg, ContractError> {
-    let token_id_to_mint: String;
-    let mut owner: String = sender.to_string();
-    if let Some(token_id) = token_id {
-        token_id_to_mint = token_id.to_string();
-        let all_nft_info_response: AllNftInfoResponse<Metadata> = deps.querier.query_wasm_smart(
-            vip_collection.clone(),
-            &cw721_base::msg::QueryMsg::<AllNftInfoResponse<Metadata>>::AllNftInfo {
-                token_id: token_id_to_mint.clone(),
-                include_expired: None,
-            },
-        )?;
-        owner = all_nft_info_response.access.owner;
-    } else {
-        // ensure that the sender did not mint any tokens yet
-        let tokens_response: TokensResponse = deps.querier.query_wasm_smart(
-            vip_collection.clone(),
-            &cw721_base::msg::QueryMsg::<TokensResponse>::Tokens {
-                owner: sender.to_string(),
-                start_after: None,
-                limit: None,
-            },
-        )?;
-        ensure!(
-            tokens_response.tokens.is_empty(),
-            ContractError::AlreadyMinted {}
-        );
-        token_id_to_mint = increment_token_index(deps.storage)?.to_string();
-    }
+    // ensure that the sender did not mint any tokens yet
+    let tokens_response: TokensResponse = deps.querier.query_wasm_smart(
+        vip_collection.clone(),
+        &cw721_base::msg::QueryMsg::<TokensResponse>::Tokens {
+            owner: sender.to_string(),
+            start_after: None,
+            limit: None,
+        },
+    )?;
+    ensure!(
+        tokens_response.tokens.is_empty(),
+        ContractError::AlreadyMinted {}
+    );
 
-    let owner_addr = deps.api.addr_validate(&owner)?;
+    let owner_addr = deps.api.addr_validate(sender.as_ref())?;
     let staked_amount = total_staked(deps.branch(), owner_addr)?;
     let tiers = TIERS.load(deps.storage)?;
     let index = tiers
@@ -182,7 +154,50 @@ pub fn mint(
     let token_uri = Some(format!("{}/{}", base_uri, index));
 
     let msg = stargaze_vip_collection::ExecuteMsg::Mint {
-        token_id: token_id_to_mint,
+        token_id: increment_token_index(deps.storage)?.to_string(),
+        owner: sender.to_string(),
+        token_uri,
+        extension: stargaze_vip_collection::state::Metadata {
+            staked_amount,
+            data: None,
+            updated_at: block_time,
+        },
+    };
+
+    Ok(WasmMsg::Execute {
+        contract_addr: vip_collection.to_string(),
+        msg: to_binary(&msg)?,
+        funds: vec![],
+    })
+}
+
+pub fn update(
+    mut deps: DepsMut,
+    block_time: Timestamp,
+    vip_collection: Addr,
+    token_id: u64,
+) -> Result<WasmMsg, ContractError> {
+    let all_nft_info_response: AllNftInfoResponse<Metadata> = deps.querier.query_wasm_smart(
+        vip_collection.clone(),
+        &cw721_base::msg::QueryMsg::<AllNftInfoResponse<Metadata>>::AllNftInfo {
+            token_id: token_id.to_string(),
+            include_expired: None,
+        },
+    )?;
+    let owner = all_nft_info_response.access.owner;
+    let owner_addr = deps.api.addr_validate(&owner)?;
+
+    let staked_amount = total_staked(deps.branch(), owner_addr)?;
+    let tiers = TIERS.load(deps.storage)?;
+    let index = tiers
+        .iter()
+        .position(|&x| x >= staked_amount)
+        .unwrap_or(tiers.len());
+    let base_uri = BASE_URI.load(deps.storage)?;
+    let token_uri = Some(format!("{}/{}", base_uri, index));
+
+    let msg = stargaze_vip_collection::ExecuteMsg::Mint {
+        token_id: token_id.to_string(),
         owner,
         token_uri,
         extension: stargaze_vip_collection::state::Metadata {
