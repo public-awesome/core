@@ -3,14 +3,18 @@ use std::env;
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    ensure, instantiate2_address, to_binary, Addr, Binary, CodeInfoResponse, ContractInfoResponse,
-    Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult, Timestamp, Uint128, WasmMsg,
+    ensure, instantiate2_address, to_binary, Addr, Binary, CodeInfoResponse, Deps, DepsMut, Env,
+    Event, MessageInfo, Response, StdError, StdResult, Timestamp, Uint128, WasmMsg,
 };
 use cw2::set_contract_version;
+use cw721::{AllNftInfoResponse, TokensResponse};
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
-use crate::state::{Config, CONFIG, NAME_QUEUE};
+use crate::state::{
+    increment_token_index, BASE_URI, COLLECTION, PAUSED, TIERS, TOKEN_INDEX, TOKEN_UPDATE_HEIGHT,
+};
+use stargaze_vip_collection::state::Metadata;
 
 const CONTRACT_NAME: &str = "crates.io:stargaze-vip-minter";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -19,12 +23,15 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 pub fn instantiate(
     deps: DepsMut,
     env: Env,
-    _info: MessageInfo,
+    info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
+    check_tier_order(&msg.tiers)?;
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
-
+    cw_ownable::initialize_owner(deps.storage, deps.api, Some(info.sender.as_str()))?;
     let minter = env.contract.address;
+    BASE_URI.save(deps.storage, &msg.base_uri)?;
+    TIERS.save(deps.storage, &msg.tiers)?;
 
     let canonical_creator = deps.api.addr_canonicalize(minter.as_str())?;
     let CodeInfoResponse { checksum, .. } =
@@ -36,20 +43,12 @@ pub fn instantiate(
         .map_err(|_| StdError::generic_err("Could not calculate addr"))?;
     let collection = deps.api.addr_humanize(&canonical_addr)?;
 
-    let ContractInfoResponse { admin, .. } =
-        deps.querier.query_wasm_contract_info(minter.clone())?;
+    COLLECTION.save(deps.storage, &deps.api.addr_validate(collection.as_str())?)?;
 
-    CONFIG.save(
-        deps.storage,
-        &Config {
-            vip_collection: deps.api.addr_validate(collection.as_str())?,
-            name_collection: deps.api.addr_validate(&msg.name_collection)?,
-            update_interval: msg.update_interval,
-        },
-    )?;
+    PAUSED.save(deps.storage, &false)?;
 
     let collection_init_msg = WasmMsg::Instantiate2 {
-        admin,
+        admin: Some(String::from(info.sender)),
         code_id: msg.collection_code_id,
         label: String::from("vip-collection"),
         msg: to_binary(&cw721_base::InstantiateMsg {
@@ -61,9 +60,11 @@ pub fn instantiate(
         salt: Binary::from(salt.to_vec()),
     };
 
+    let event = Event::new("instantiate").add_attribute("collection", collection);
+
     Ok(Response::new()
         .add_message(collection_init_msg)
-        .add_attribute("collection", collection))
+        .add_event(event))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -74,87 +75,91 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::Mint { name } => execute_mint(deps, env, info, name),
-        ExecuteMsg::Update { name } => execute_update(deps, env, info, name),
-        ExecuteMsg::Pause {} => todo!(),
+        ExecuteMsg::Mint {} => execute_mint(deps, env, info),
+        ExecuteMsg::Update { token_id } => execute_update(deps, env, info, token_id),
+        ExecuteMsg::Pause {} => execute_pause(deps, info),
+        ExecuteMsg::Resume {} => execute_resume(deps, info),
+        ExecuteMsg::UpdateTiers { tiers } => execute_update_tiers(deps, info, tiers),
+        ExecuteMsg::UpdateBaseUri { base_uri } => execute_update_base_uri(deps, info, base_uri),
     }
 }
 
 pub fn execute_mint(
-    deps: DepsMut,
+    mut deps: DepsMut,
     env: Env,
     info: MessageInfo,
-    name: String,
 ) -> Result<Response, ContractError> {
-    ensure!(
-        info.sender == associated_address(deps.as_ref(), name.clone())?,
-        ContractError::Unauthorized {}
-    );
+    ensure!(!PAUSED.load(deps.storage)?, ContractError::Paused {});
 
-    let Config {
-        vip_collection,
-        update_interval,
-        ..
-    } = CONFIG.load(deps.storage)?;
+    let vip_collection = COLLECTION.load(deps.storage)?;
 
-    let mint_msg = mint(
-        deps.as_ref(),
-        info.sender,
-        env.block.time,
-        name.clone(),
-        vip_collection,
-    )?;
-
-    NAME_QUEUE.update(
-        deps.storage,
-        env.block.height + update_interval,
-        |names| -> StdResult<_> {
-            let mut names = names.unwrap_or_default();
-            names.push(name);
-            Ok(names)
-        },
-    )?;
-
-    Ok(Response::new().add_message(mint_msg))
+    let mint_msg = mint(deps.branch(), info.sender, env.block.time, vip_collection)?;
+    let token_id = TOKEN_INDEX.load(deps.storage)?;
+    TOKEN_UPDATE_HEIGHT.update(deps.storage, token_id, |_| -> StdResult<_> {
+        Ok(env.block.height)
+    })?;
+    let event = Event::new("mint");
+    Ok(Response::new().add_message(mint_msg).add_event(event))
 }
 
 pub fn execute_update(
-    deps: DepsMut,
+    mut deps: DepsMut,
     env: Env,
-    info: MessageInfo,
-    name: String,
+    _info: MessageInfo,
+    token_id: u64,
 ) -> Result<Response, ContractError> {
-    ensure!(
-        info.sender == associated_address(deps.as_ref(), name.clone())?,
-        ContractError::Unauthorized {}
-    );
+    ensure!(!PAUSED.load(deps.storage)?, ContractError::Paused {});
+    let vip_collection = COLLECTION.load(deps.storage)?;
 
-    let Config { vip_collection, .. } = CONFIG.load(deps.storage)?;
+    let last_update_height = TOKEN_UPDATE_HEIGHT.may_load(deps.storage, token_id)?;
+    if last_update_height.is_none() {
+        return Err(ContractError::TokenNotFound {});
+    }
 
-    let mint_msg = mint(
-        deps.as_ref(),
-        info.sender,
-        env.block.time,
-        name,
-        vip_collection,
-    )?;
+    let mint_msg = update(deps.branch(), env.block.time, vip_collection, token_id)?;
 
-    Ok(Response::new().add_message(mint_msg))
+    TOKEN_UPDATE_HEIGHT.update(deps.storage, token_id, |_| -> StdResult<_> {
+        Ok(env.block.height)
+    })?;
+    let event = Event::new("update");
+    Ok(Response::new().add_message(mint_msg).add_event(event))
 }
-
 pub fn mint(
-    deps: Deps,
+    mut deps: DepsMut,
     sender: Addr,
     block_time: Timestamp,
-    name: String,
     vip_collection: Addr,
 ) -> Result<WasmMsg, ContractError> {
+    // ensure that the sender did not mint any tokens yet
+    let tokens_response: TokensResponse = deps.querier.query_wasm_smart(
+        vip_collection.clone(),
+        &cw721_base::msg::QueryMsg::<TokensResponse>::Tokens {
+            owner: sender.to_string(),
+            start_after: None,
+            limit: None,
+        },
+    )?;
+    ensure!(
+        tokens_response.tokens.is_empty(),
+        ContractError::AlreadyMinted {}
+    );
+
+    let owner_addr = deps.api.addr_validate(sender.as_ref())?;
+    let staked_amount = total_staked(deps.branch(), owner_addr)?;
+    let tiers = TIERS.load(deps.storage)?;
+    let index = tiers
+        .iter()
+        .position(|&x| x >= staked_amount)
+        .unwrap_or(tiers.len());
+    let base_uri = BASE_URI.load(deps.storage)?;
+    let token_uri = Some(format!("{}/{}", base_uri, index));
+
     let msg = stargaze_vip_collection::ExecuteMsg::Mint {
-        token_id: name,
+        token_id: increment_token_index(deps.storage)?.to_string(),
         owner: sender.to_string(),
-        token_uri: None,
+        token_uri,
         extension: stargaze_vip_collection::state::Metadata {
-            staked_amount: total_staked(deps, sender)?,
+            staked_amount,
             data: None,
             updated_at: block_time,
         },
@@ -167,16 +172,104 @@ pub fn mint(
     })
 }
 
-pub fn associated_address(deps: Deps, name: String) -> Result<Addr, ContractError> {
-    let associated_addr: Addr = deps.querier.query_wasm_smart(
-        CONFIG.load(deps.storage)?.name_collection,
-        &sg_name::SgNameQueryMsg::AssociatedAddress { name },
+pub fn update(
+    mut deps: DepsMut,
+    block_time: Timestamp,
+    vip_collection: Addr,
+    token_id: u64,
+) -> Result<WasmMsg, ContractError> {
+    let all_nft_info_response: AllNftInfoResponse<Metadata> = deps.querier.query_wasm_smart(
+        vip_collection.clone(),
+        &cw721_base::msg::QueryMsg::<AllNftInfoResponse<Metadata>>::AllNftInfo {
+            token_id: token_id.to_string(),
+            include_expired: None,
+        },
     )?;
+    let owner = all_nft_info_response.access.owner;
+    let owner_addr = deps.api.addr_validate(&owner)?;
 
-    Ok(associated_addr)
+    let staked_amount = total_staked(deps.branch(), owner_addr)?;
+    let tiers = TIERS.load(deps.storage)?;
+    let index = tiers
+        .iter()
+        .position(|&x| x >= staked_amount)
+        .unwrap_or(tiers.len());
+    let base_uri = BASE_URI.load(deps.storage)?;
+    let token_uri = Some(format!("{}/{}", base_uri, index));
+
+    let msg = stargaze_vip_collection::ExecuteMsg::Mint {
+        token_id: token_id.to_string(),
+        owner,
+        token_uri,
+        extension: stargaze_vip_collection::state::Metadata {
+            staked_amount,
+            data: None,
+            updated_at: block_time,
+        },
+    };
+
+    Ok(WasmMsg::Execute {
+        contract_addr: vip_collection.to_string(),
+        msg: to_binary(&msg)?,
+        funds: vec![],
+    })
 }
 
-fn total_staked(deps: Deps, address: Addr) -> StdResult<Uint128> {
+pub fn execute_update_tiers(
+    deps: DepsMut,
+    info: MessageInfo,
+    tiers: Vec<Uint128>,
+) -> Result<Response, ContractError> {
+    check_tier_order(&tiers)?;
+    cw_ownable::assert_owner(deps.storage, &info.sender)
+        .map_err(|_| ContractError::Unauthorized {})?;
+    TIERS.save(deps.storage, &tiers)?;
+    let event = Event::new("update_tiers").add_attribute(
+        "tiers",
+        tiers
+            .iter()
+            .map(|x| x.to_string())
+            .collect::<Vec<String>>()
+            .join(","),
+    );
+    Ok(Response::new().add_event(event))
+}
+
+pub fn execute_update_base_uri(
+    deps: DepsMut,
+    info: MessageInfo,
+    base_uri: String,
+) -> Result<Response, ContractError> {
+    cw_ownable::assert_owner(deps.storage, &info.sender)
+        .map_err(|_| ContractError::Unauthorized {})?;
+    BASE_URI.save(deps.storage, &base_uri)?;
+    let event = Event::new("update_base_uri").add_attribute("base_uri", base_uri);
+    Ok(Response::new().add_event(event))
+}
+
+pub fn execute_pause(deps: DepsMut, info: MessageInfo) -> Result<Response, ContractError> {
+    cw_ownable::assert_owner(deps.storage, &info.sender)
+        .map_err(|_| ContractError::Unauthorized {})?;
+
+    ensure!(!PAUSED.load(deps.storage)?, ContractError::AlreadyPaused {});
+    PAUSED.save(deps.storage, &true)?;
+
+    let event = Event::new("pause");
+    Ok(Response::new().add_event(event))
+}
+
+pub fn execute_resume(deps: DepsMut, info: MessageInfo) -> Result<Response, ContractError> {
+    cw_ownable::assert_owner(deps.storage, &info.sender)
+        .map_err(|_| ContractError::Unauthorized {})?;
+
+    ensure!(PAUSED.load(deps.storage)?, ContractError::NotPaused {});
+    PAUSED.save(deps.storage, &false)?;
+
+    let event = Event::new("resume");
+    Ok(Response::new().add_event(event))
+}
+
+fn total_staked(deps: DepsMut, address: Addr) -> StdResult<Uint128> {
     let total = deps
         .querier
         .query_all_delegations(address)?
@@ -186,9 +279,60 @@ fn total_staked(deps: Deps, address: Addr) -> StdResult<Uint128> {
     Ok(Uint128::from(total))
 }
 
+fn check_tier_order(tiers: &[Uint128]) -> StdResult<()> {
+    let mut prev = Uint128::zero();
+    for tier in tiers {
+        if *tier <= prev {
+            return Err(StdError::generic_err("Tiers must be in ascending order"));
+        }
+        prev = *tier;
+    }
+    Ok(())
+}
+
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn query(_deps: Deps, _env: Env, _msg: QueryMsg) -> StdResult<Binary> {
-    unimplemented!()
+pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
+    match msg {
+        QueryMsg::Collection {} => to_binary(&COLLECTION.load(deps.storage)?.to_string()),
+        QueryMsg::IsPaused {} => to_binary(&PAUSED.load(deps.storage)?),
+        QueryMsg::TokenUpdateHeight { token_id } => {
+            to_binary(&TOKEN_UPDATE_HEIGHT.load(deps.storage, token_id)?)
+        }
+        QueryMsg::Tier { address } => {
+            let tokens_response: cw721::TokensResponse = deps.querier.query_wasm_smart(
+                COLLECTION.load(deps.storage)?,
+                &cw721::Cw721QueryMsg::Tokens {
+                    owner: address,
+                    start_after: None,
+                    limit: None,
+                },
+            )?;
+            let token_id = tokens_response
+                .tokens
+                .first()
+                .ok_or_else(|| StdError::generic_err("No token found for address"))?;
+
+            let token_info: cw721::NftInfoResponse<Metadata> = deps.querier.query_wasm_smart(
+                COLLECTION.load(deps.storage)?,
+                &cw721::Cw721QueryMsg::NftInfo {
+                    token_id: token_id.to_string(),
+                },
+            )?;
+            let staked_amount = token_info.extension.staked_amount;
+
+            let tiers = TIERS.load(deps.storage)?;
+            let index = tiers
+                .iter()
+                .position(|&x| x >= staked_amount)
+                .unwrap_or(tiers.len());
+
+            Ok(to_binary(&index)?)
+        }
+        QueryMsg::Tiers {} => {
+            let tiers = TIERS.load(deps.storage)?;
+            Ok(to_binary(&tiers)?)
+        }
+    }
 }
 
 #[cfg(test)]
