@@ -128,6 +128,12 @@ describe('Mint Loyalty Program Tokens', () => {
     )
     const stakedTokens: StakedTokensAPIResponse = await stakedTokensResponse.json()
     const stakedAmount = stakedTokens.delegation_responses[0]?.balance?.amount
+
+    const scrambledUpdateTiersMsg: MinterExecuteMsg = {
+        update_tiers: {
+            tiers: [(Number(stakedAmount) - 100).toString(), (Number(stakedAmount) + 100).toString(), (Number(stakedAmount) - 500).toString()],
+        },
+    }
     
     const updateTiersMsg: MinterExecuteMsg = {
       update_tiers: {
@@ -142,6 +148,14 @@ describe('Mint Loyalty Program Tokens', () => {
       'auto',
       'update tiers',
     )).rejects.toThrowError(/Unauthorized/)
+
+    await expect(testUserOne.client.execute(
+      testUserOne.address,
+      minterAddress,
+      scrambledUpdateTiersMsg,
+      'auto',
+      'update tiers',
+    )).rejects.toThrowError(/Tiers must be in ascending order/)
 
     await testUserOne.client.execute(
       testUserOne.address,
