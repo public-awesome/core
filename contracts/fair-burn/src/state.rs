@@ -1,13 +1,15 @@
 use crate::error::ContractError;
 
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{ensure, Decimal, Storage};
+use cosmwasm_std::{ensure, Addr, Decimal, Storage};
 use cw_storage_plus::Item;
 
 #[cw_serde]
 pub struct Config {
     /// The percentage of funds to be burned
     pub fee_percent: Decimal,
+    /// The address to send fees to if the funds are not in STARS
+    pub fee_manager: Addr,
 }
 
 impl Config {

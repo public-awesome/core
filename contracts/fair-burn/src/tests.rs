@@ -53,8 +53,12 @@ fn try_instantiate() {
     let fair_burn_id = app.store_code(contract());
 
     let creator = Addr::unchecked("creator");
+    let fee_manager = Addr::unchecked("fee_manager");
 
-    let init_msg = InstantiateMsg { fee_bps: 500 };
+    let init_msg = InstantiateMsg {
+        fee_bps: 500,
+        fee_manager: fee_manager.to_string(),
+    };
     let msg = WasmMsg::Instantiate {
         admin: None,
         code_id: fair_burn_id,
@@ -74,9 +78,13 @@ fn try_sudo_update() {
     let fair_burn_id = app.store_code(contract());
 
     let creator = Addr::unchecked("creator");
+    let fee_manager = Addr::unchecked("fee_manager");
 
     let fee_bps = 5000;
-    let init_msg = InstantiateMsg { fee_bps };
+    let init_msg = InstantiateMsg {
+        fee_bps,
+        fee_manager: fee_manager.to_string(),
+    };
     let fair_burn = app
         .instantiate_contract(fair_burn_id, creator, &init_msg, &[], "FairBurn", None)
         .unwrap();
@@ -118,8 +126,14 @@ fn try_execute_fair_burn() {
     let fair_burn_id = app.store_code(contract());
 
     let creator = Addr::unchecked("creator");
+    let fee_manager = Addr::unchecked("fee_manager");
 
-    let init_msg = InstantiateMsg { fee_bps: 5000 };
+    let fee_bps = 5000;
+    let init_msg = InstantiateMsg {
+        fee_bps,
+        fee_manager: fee_manager.to_string(),
+    };
+
     let fair_burn = app
         .instantiate_contract(fair_burn_id, creator, &init_msg, &[], "FairBurn", None)
         .unwrap();

@@ -24,6 +24,7 @@ pub fn instantiate(
 
     let config = Config {
         fee_percent: bps_to_decimal(msg.fee_bps),
+        fee_manager: deps.api.addr_validate(&msg.fee_manager)?,
     };
     config.save(deps.storage)?;
 
@@ -31,7 +32,8 @@ pub fn instantiate(
         .add_attribute("action", "instantiate")
         .add_attribute("contract_name", CONTRACT_NAME)
         .add_attribute("contract_version", CONTRACT_VERSION)
-        .add_attribute("fee_percent", config.fee_percent.to_string());
+        .add_attribute("fee_percent", config.fee_percent.to_string())
+        .add_attribute("fee_manager", config.fee_manager.to_string());
 
     Ok(Response::new().add_event(event))
 }
