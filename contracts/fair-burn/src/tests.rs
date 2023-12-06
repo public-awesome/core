@@ -8,7 +8,7 @@ use crate::{
 };
 
 use cosmwasm_std::{
-    coin, coins, to_binary, Addr, Coin, Decimal, Event, StdResult, Uint128, WasmMsg,
+    coin, coins, to_binary, Addr, Coin, Decimal, Event, Querier, StdResult, Uint128, WasmMsg,
 };
 use cw_multi_test::{
     AppResponse, BankSudo, Contract, ContractWrapper, Executor, SudoMsg as CwSudoMsg, WasmSudo,
@@ -99,9 +99,11 @@ fn try_sudo_update() {
         Decimal::percent(fee_bps) / Uint128::from(100u64)
     );
 
+    let new_fee_manager = Addr::unchecked("new_fee_manager");
     let new_fee_bps = 4000;
     let sudo_msg = SudoMsg::UpdateConfig {
         fee_bps: Some(new_fee_bps),
+        fee_manager: Some(new_fee_manager.to_string()),
     };
     let response = app.sudo(CwSudoMsg::Wasm(WasmSudo {
         contract_addr: fair_burn.clone(),
@@ -114,10 +116,12 @@ fn try_sudo_update() {
         .wrap()
         .query_wasm_smart::<Config>(fair_burn, &query_msg)
         .unwrap();
+
     assert_eq!(
         response.fee_percent,
         Decimal::percent(new_fee_bps) / Uint128::from(100u64)
     );
+    assert_eq!(response.fee_manager, new_fee_manager);
 }
 
 #[test]
@@ -204,12 +208,13 @@ fn try_execute_fair_burn() {
     assert_eq!(dist_amount, "5");
 
     // Can handle multiple denoms
+    let alt_coin = coin(11, alt_denom);
     let response = app
         .execute_contract(
             burner.clone(),
             fair_burn.clone(),
             &ExecuteMsg::FairBurn { recipient: None },
-            &[coin(11, NATIVE_DENOM), coin(11, alt_denom)],
+            &[coin(11, NATIVE_DENOM), alt_coin.clone()],
         )
         .unwrap();
     let event = find_event(&response, "wasm-fair-burn").unwrap();
@@ -217,9 +222,12 @@ fn try_execute_fair_burn() {
     assert_eq!(burn_amount, "6");
     let dist_amount = find_attribute(event, "dist_amount").unwrap();
     assert_eq!(dist_amount, "5");
-    let event = find_event(&response, "wasm-fund-fair-burn-pool").unwrap();
-    let fair_burn_coin = find_attribute(event, "coin_0").unwrap();
-    assert_eq!(fair_burn_coin, format!("11{alt_denom}"));
+
+    let fee_manager_balance = app
+        .wrap()
+        .query_balance(fee_manager.clone(), alt_denom)
+        .unwrap();
+    assert_eq!(fee_manager_balance, alt_coin);
 
     // Can handle recipient address on native denom
     let response = app
@@ -235,13 +243,22 @@ fn try_execute_fair_burn() {
     let event = find_event(&response, "wasm-fair-burn").unwrap();
     let burn_amount = find_attribute(event, "burn_amount").unwrap();
     assert_eq!(burn_amount, "6");
-    let event = find_event(&response, "transfer").unwrap();
-    let recipient_address = find_attribute(event, "recipient").unwrap();
-    assert_eq!(recipient_address, recipient.to_string());
-    let recipient_coin = find_attribute(event, "amount").unwrap();
-    assert_eq!(recipient_coin, format!("5{NATIVE_DENOM}"));
+
+    let recipient_balance = app
+        .wrap()
+        .query_balance(recipient.clone(), NATIVE_DENOM)
+        .unwrap();
+    assert_eq!(recipient_balance, coin(5u128, NATIVE_DENOM));
 
     // Can handle recipient address on alt denom
+    let fee_manager_balance_before = app
+        .wrap()
+        .query_balance(fee_manager.clone(), alt_denom)
+        .unwrap();
+    let recipient_balance_before = app
+        .wrap()
+        .query_balance(recipient.clone(), alt_denom)
+        .unwrap();
     let response = app
         .execute_contract(
             burner.clone(),
@@ -252,12 +269,18 @@ fn try_execute_fair_burn() {
             &[coin(11, alt_denom)],
         )
         .unwrap();
-    let event = find_event(&response, "wasm-fund-fair-burn-pool").unwrap();
-    let fund_pool_coin = find_attribute(event, "coin_0").unwrap();
-    assert_eq!(fund_pool_coin, format!("6{alt_denom}"));
-    let event = find_event(&response, "transfer").unwrap();
-    let recipient_address = find_attribute(event, "recipient").unwrap();
-    assert_eq!(recipient_address, recipient.to_string());
-    let recipient_coin = find_attribute(event, "amount").unwrap();
-    assert_eq!(recipient_coin, format!("5{alt_denom}"));
+    let fee_manager_balance_after = app.wrap().query_balance(fee_manager, alt_denom).unwrap();
+    assert_eq!(
+        fee_manager_balance_after.amount - fee_manager_balance_before.amount,
+        Uint128::from(6u128)
+    );
+
+    let recipient_balance_after = app
+        .wrap()
+        .query_balance(recipient.clone(), alt_denom)
+        .unwrap();
+    assert_eq!(
+        recipient_balance_after.amount - recipient_balance_before.amount,
+        Uint128::from(5u128)
+    );
 }

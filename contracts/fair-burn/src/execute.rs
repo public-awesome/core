@@ -1,9 +1,8 @@
 use crate::{error::ContractError, helpers::calculate_payouts, msg::ExecuteMsg, state::CONFIG};
 
-use cosmwasm_std::{ensure, Addr, BankMsg, Coin, DepsMut, Env, Event, MessageInfo};
+use cosmwasm_std::{coin, ensure, Addr, BankMsg, Coin, DepsMut, Env, Event, MessageInfo, Uint128};
 use cw_utils::{maybe_addr, NativeBalance};
 use sg_std::{create_fund_fairburn_pool_msg, Response, NATIVE_DENOM};
-use std::collections::BTreeMap;
 
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
@@ -38,77 +37,66 @@ pub fn execute_fair_burn(
 
     let config = CONFIG.load(deps.storage)?;
 
-    let mut payout_map: BTreeMap<String, Vec<Coin>> = BTreeMap::new();
+    let mut recipient_funds: Vec<Coin> = vec![];
+    let mut fee_manager_funds: Vec<Coin> = vec![];
+    let mut funds_normalized_vec = funds_normalized.into_vec();
 
-    let fair_burn_pool_key = "fair-burn-pool".to_string();
+    while let Some(funds) = funds_normalized_vec.pop() {
+        let (protocol_coin, dist_coin) = calculate_payouts(&funds, &config);
 
-    for funds in funds_normalized.into_vec() {
-        if funds.denom == NATIVE_DENOM {
-            let mut event = Event::new("fair-burn");
+        match funds.denom.as_str() {
+            NATIVE_DENOM => {
+                // For STARS, we burn a percentage of the funds and the rest is
+                // distributed to the recipient or the fairburn pool.
+                let mut event = Event::new("fair-burn")
+                    .add_attribute("burn_amount", protocol_coin.amount.to_string());
 
-            let (burn_coin, dist_coin) = calculate_payouts(&funds, &config);
+                response = response.add_message(BankMsg::Burn {
+                    amount: vec![protocol_coin],
+                });
 
-            event = event.add_attribute("burn_amount", burn_coin.amount.to_string());
-            response = response.add_message(BankMsg::Burn {
-                amount: vec![burn_coin],
-            });
-
-            if let Some(dist_coin) = dist_coin {
-                match &recipient {
-                    Some(recipient) => {
-                        payout_map
-                            .entry(recipient.to_string())
-                            .or_insert(vec![])
-                            .push(dist_coin.clone());
-                    }
-                    None => {
+                if let Some(dist_coin) = dist_coin {
+                    if let Some(_) = &recipient {
+                        recipient_funds.push(dist_coin);
+                    } else {
                         event = event.add_attribute("dist_amount", dist_coin.amount.to_string());
+
                         response =
                             response.add_message(create_fund_fairburn_pool_msg(vec![dist_coin]));
                     }
                 }
+
+                response = response.add_event(event);
             }
-
-            response = response.add_event(event);
-        } else {
-            let (fee_coin, dist_coin) = match recipient {
-                Some(_) => calculate_payouts(&funds, &config),
-                None => (funds, None),
-            };
-
-            payout_map
-                .entry(fair_burn_pool_key.clone())
-                .or_insert(vec![])
-                .push(fee_coin.clone());
-
-            if let Some(dist_coin) = dist_coin {
-                let recipient = recipient.as_ref().unwrap().to_string();
-                payout_map
-                    .entry(recipient)
-                    .or_insert(vec![])
-                    .push(dist_coin.clone());
+            _ => {
+                if let Some(_) = &recipient {
+                    fee_manager_funds.push(protocol_coin);
+                    if let Some(dist_coin) = dist_coin {
+                        recipient_funds.push(dist_coin);
+                    }
+                } else {
+                    let fee_manager_coin = coin(
+                        protocol_coin.amount.u128() + dist_coin.map_or(0u128, |c| c.amount.u128()),
+                        protocol_coin.denom,
+                    );
+                    fee_manager_funds.push(fee_manager_coin);
+                }
             }
         }
     }
 
-    for (entry_key, funds) in payout_map {
-        match entry_key {
-            k if k == fair_burn_pool_key => {
-                let mut event = Event::new("fund-fair-burn-pool");
-                for (idx, c) in funds.iter().enumerate() {
-                    event = event.add_attribute(format!("coin_{idx}"), c.to_string());
-                }
-                response = response
-                    .add_event(event)
-                    .add_message(create_fund_fairburn_pool_msg(funds));
-            }
-            k => {
-                response = response.add_message(BankMsg::Send {
-                    to_address: k.to_string(),
-                    amount: funds,
-                });
-            }
-        }
+    if fee_manager_funds.len() > 0 {
+        response = response.add_message(BankMsg::Send {
+            to_address: config.fee_manager.to_string(),
+            amount: fee_manager_funds,
+        })
+    }
+
+    if recipient_funds.len() > 0 {
+        response = response.add_message(BankMsg::Send {
+            to_address: recipient.unwrap().to_string(),
+            amount: recipient_funds,
+        })
     }
 
     Ok(response)
