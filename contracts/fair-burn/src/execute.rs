@@ -1,6 +1,6 @@
 use crate::{error::ContractError, helpers::calculate_payouts, msg::ExecuteMsg, state::CONFIG};
 
-use cosmwasm_std::{coin, ensure, Addr, BankMsg, Coin, DepsMut, Env, Event, MessageInfo, Uint128};
+use cosmwasm_std::{coin, ensure, Addr, BankMsg, Coin, DepsMut, Env, Event, MessageInfo};
 use cw_utils::{maybe_addr, NativeBalance};
 use sg_std::{create_fund_fairburn_pool_msg, Response, NATIVE_DENOM};
 
@@ -56,7 +56,7 @@ pub fn execute_fair_burn(
                 });
 
                 if let Some(dist_coin) = dist_coin {
-                    if let Some(_) = &recipient {
+                    if recipient.is_some() {
                         recipient_funds.push(dist_coin);
                     } else {
                         event = event.add_attribute("dist_amount", dist_coin.amount.to_string());
@@ -69,7 +69,7 @@ pub fn execute_fair_burn(
                 response = response.add_event(event);
             }
             _ => {
-                if let Some(_) = &recipient {
+                if recipient.is_some() {
                     fee_manager_funds.push(protocol_coin);
                     if let Some(dist_coin) = dist_coin {
                         recipient_funds.push(dist_coin);
@@ -85,14 +85,14 @@ pub fn execute_fair_burn(
         }
     }
 
-    if fee_manager_funds.len() > 0 {
+    if !fee_manager_funds.is_empty() {
         response = response.add_message(BankMsg::Send {
             to_address: config.fee_manager.to_string(),
             amount: fee_manager_funds,
         })
     }
 
-    if recipient_funds.len() > 0 {
+    if !recipient_funds.is_empty() {
         response = response.add_message(BankMsg::Send {
             to_address: recipient.unwrap().to_string(),
             amount: recipient_funds,

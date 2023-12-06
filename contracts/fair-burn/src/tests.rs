@@ -8,7 +8,7 @@ use crate::{
 };
 
 use cosmwasm_std::{
-    coin, coins, to_binary, Addr, Coin, Decimal, Event, Querier, StdResult, Uint128, WasmMsg,
+    coin, coins, to_binary, Addr, Coin, Decimal, Event, StdResult, Uint128, WasmMsg,
 };
 use cw_multi_test::{
     AppResponse, BankSudo, Contract, ContractWrapper, Executor, SudoMsg as CwSudoMsg, WasmSudo,
@@ -259,7 +259,7 @@ fn try_execute_fair_burn() {
         .wrap()
         .query_balance(recipient.clone(), alt_denom)
         .unwrap();
-    let response = app
+    let _response = app
         .execute_contract(
             burner.clone(),
             fair_burn,
