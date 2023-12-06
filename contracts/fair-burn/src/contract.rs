@@ -1,3 +1,9 @@
+use crate::{
+    error::ContractError,
+    helpers::{bps_to_decimal, calculate_payouts},
+    msg::{ExecuteMsg, InstantiateMsg, QueryMsg, SudoMsg},
+    state::{Config, CONFIG},
+};
 use cosmwasm_std::{
     ensure, to_binary, Addr, BankMsg, Binary, Coin, Deps, DepsMut, Empty, Env, Event, MessageInfo,
     StdResult,
@@ -6,17 +12,6 @@ use cw2::{get_contract_version, set_contract_version};
 use cw_utils::{maybe_addr, NativeBalance};
 use sg_std::{create_fund_fairburn_pool_msg, Response, NATIVE_DENOM};
 use std::collections::BTreeMap;
-
-use crate::{
-    error::ContractError,
-    helpers::{bps_to_decimal, calculate_payouts},
-    msg::{ExecuteMsg, InstantiateMsg, QueryMsg, SudoMsg},
-    state::{Config, CONFIG},
-};
-
-// version info for migration info
-const CONTRACT_NAME: &str = "crates.io:stargaze-fair-burn";
-const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;

@@ -2,8 +2,6 @@
 use crate::state::Config;
 
 use cosmwasm_schema::{cw_serde, QueryResponses};
-#[cfg_attr(not(debug_assertions), allow(unused_imports))]
-use cw2::ContractVersion;
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -19,8 +17,6 @@ pub enum ExecuteMsg {
 #[cw_serde]
 #[derive(QueryResponses)]
 pub enum QueryMsg {
-    #[returns(ContractVersion)]
-    ContractVersion {},
     #[returns(Config)]
     Config {},
 }

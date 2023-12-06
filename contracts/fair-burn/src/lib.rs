@@ -9,12 +9,19 @@
 //!
 //! - `elfagar-1: stars1mp4dg9mst3hxn5xvcd9zllyx6gguu5jsp5tyt9nsfrtghhwj2akqudhls8`
 
-#[allow(dead_code)]
-pub mod contract;
+mod constants;
 mod error;
+pub mod execute;
 mod helpers;
+pub mod instantiate;
+pub mod migrate;
 #[doc(hidden)]
 pub mod msg;
+pub mod query;
 mod state;
+pub mod sudo;
+
+#[cfg(test)]
+mod tests;
 
 pub use crate::helpers::append_fair_burn_msg;
