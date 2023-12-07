@@ -275,10 +275,7 @@ fn try_execute_fair_burn() {
         Uint128::from(6u128)
     );
 
-    let recipient_balance_after = app
-        .wrap()
-        .query_balance(recipient.clone(), alt_denom)
-        .unwrap();
+    let recipient_balance_after = app.wrap().query_balance(recipient, alt_denom).unwrap();
     assert_eq!(
         recipient_balance_after.amount - recipient_balance_before.amount,
         Uint128::from(5u128)
