@@ -2095,10 +2095,10 @@
   dependencies:
     "@sinonjs/commons" "^3.0.0"
 
-"@stargazezone/core-types@0.2.0":
-  version "0.2.0"
-  resolved "https://registry.yarnpkg.com/@stargazezone/core-types/-/core-types-0.2.0.tgz#72eec9077a0df5950bdf8e209461e3adf0cbb56b"
-  integrity sha512-ETP5lC9ZNDHrSxgvKVEthHXBx8Pm+d/COD5uroH6J8b6Js+4MCuFl6DE78Ny8FEyRx6rZCFarbvQmoJeXwhAcA==
+"@stargazezone/core-types@0.5.0":
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/@stargazezone/core-types/-/core-types-0.5.0.tgz#19b68c6a85b44b019bdb6bd45327f5c51b497fb4"
+  integrity sha512-zsmQzvEEdJkyxeFQHi7NZ29HxBp6YutbEjuO2Zit1M+Rt3yLqbQC1VK92QUQQXBA6lRm++kHj8PCewbtQbsaJg==
   dependencies:
     "@cosmjs/amino" "^0.31.0"
     "@cosmjs/cosmwasm-stargate" "^0.31.0"

@@ -1452,7 +1452,7 @@ dependencies = [
 
 [[package]]
 name = "stargaze-fair-burn"
-version = "1.0.4"
+version = "1.1.0"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -1461,6 +1461,7 @@ dependencies = [
  "cw-utils 1.0.1",
  "cw2 1.1.0",
  "schemars",
+ "semver",
  "serde",
  "sg-multi-test 2.4.0",
  "sg-std 2.4.0",

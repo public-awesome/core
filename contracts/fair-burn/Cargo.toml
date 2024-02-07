@@ -1,6 +1,6 @@
 [package]
 name          = "stargaze-fair-burn"
-version       = "1.0.4"
+version       = "1.1.0"
 authors       = ["Tasio Victoria <tasiovictoria@ujulabs.com>"]
 description   = "Stargaze Fair Burn"
 documentation = "https://docs.rs/stargaze-fair-burn"
@@ -42,6 +42,7 @@ sg-std          = { workspace = true }
 schemars        = { workspace = true }
 serde           = { workspace = true }
 thiserror       = { workspace = true }
+semver          = { workspace = true }
 
 [dev-dependencies]
 cw-multi-test = { workspace = true }

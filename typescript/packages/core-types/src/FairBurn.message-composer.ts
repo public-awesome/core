@@ -8,7 +8,7 @@ import { Coin } from "@cosmjs/amino";
 import { MsgExecuteContractEncodeObject } from "@cosmjs/cosmwasm-stargate";
 import { MsgExecuteContract } from "cosmjs-types/cosmwasm/wasm/v1/tx";
 import { toUtf8 } from "@cosmjs/encoding";
-import { InstantiateMsg, ExecuteMsg, QueryMsg, Decimal, Config, ContractVersion } from "./FairBurn.types";
+import { InstantiateMsg, ExecuteMsg, QueryMsg, SudoMsg, Addr, Decimal, Config } from "./FairBurn.types";
 export interface FairBurnMessage {
   contractAddress: string;
   sender: string;

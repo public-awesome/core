@@ -6,6 +6,7 @@
 
 export interface InstantiateMsg {
   fee_bps: number;
+  fee_manager: string;
 }
 export type ExecuteMsg = {
   fair_burn: {
@@ -13,15 +14,17 @@ export type ExecuteMsg = {
   };
 };
 export type QueryMsg = {
-  contract_version: {};
-} | {
   config: {};
 };
+export type SudoMsg = {
+  update_config: {
+    fee_bps?: number | null;
+    fee_manager?: string | null;
+  };
+};
+export type Addr = string;
 export type Decimal = string;
 export interface Config {
+  fee_manager: Addr;
   fee_percent: Decimal;
-}
-export interface ContractVersion {
-  contract: string;
-  version: string;
 }

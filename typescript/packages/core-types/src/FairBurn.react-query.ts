@@ -5,7 +5,7 @@
 */
 
 import { UseQueryOptions, useQuery } from "react-query";
-import { InstantiateMsg, ExecuteMsg, QueryMsg, Decimal, Config, ContractVersion } from "./FairBurn.types";
+import { InstantiateMsg, ExecuteMsg, QueryMsg, SudoMsg, Addr, Decimal, Config } from "./FairBurn.types";
 import { FairBurnQueryClient } from "./FairBurn.client";
 export const fairBurnQueryKeys = {
   contract: ([{
@@ -14,25 +14,12 @@ export const fairBurnQueryKeys = {
   address: (contractAddress: string | undefined) => ([{ ...fairBurnQueryKeys.contract[0],
     address: contractAddress
   }] as const),
-  contractVersion: (contractAddress: string | undefined, args?: Record<string, unknown>) => ([{ ...fairBurnQueryKeys.address(contractAddress)[0],
-    method: "contract_version",
-    args
-  }] as const),
   config: (contractAddress: string | undefined, args?: Record<string, unknown>) => ([{ ...fairBurnQueryKeys.address(contractAddress)[0],
     method: "config",
     args
   }] as const)
 };
 export const fairBurnQueries = {
-  contractVersion: <TData = ContractVersion,>({
-    client,
-    options
-  }: FairBurnContractVersionQuery<TData>): UseQueryOptions<ContractVersion, Error, TData> => ({
-    queryKey: fairBurnQueryKeys.contractVersion(client?.contractAddress),
-    queryFn: () => client ? client.contractVersion() : Promise.reject(new Error("Invalid client")),
-    ...options,
-    enabled: !!client && (options?.enabled != undefined ? options.enabled : true)
-  }),
   config: <TData = Config,>({
     client,
     options
@@ -53,15 +40,6 @@ export function useFairBurnConfigQuery<TData = Config>({
   options
 }: FairBurnConfigQuery<TData>) {
   return useQuery<Config, Error, TData>(fairBurnQueryKeys.config(client?.contractAddress), () => client ? client.config() : Promise.reject(new Error("Invalid client")), { ...options,
-    enabled: !!client && (options?.enabled != undefined ? options.enabled : true)
-  });
-}
-export interface FairBurnContractVersionQuery<TData> extends FairBurnReactQuery<ContractVersion, TData> {}
-export function useFairBurnContractVersionQuery<TData = ContractVersion>({
-  client,
-  options
-}: FairBurnContractVersionQuery<TData>) {
-  return useQuery<ContractVersion, Error, TData>(fairBurnQueryKeys.contractVersion(client?.contractAddress), () => client ? client.contractVersion() : Promise.reject(new Error("Invalid client")), { ...options,
     enabled: !!client && (options?.enabled != undefined ? options.enabled : true)
   });
 }

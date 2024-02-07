@@ -1,13 +1,14 @@
 {
   "contract_name": "stargaze-fair-burn",
-  "contract_version": "1.0.4",
+  "contract_version": "1.1.0",
   "idl_version": "1.0.0",
   "instantiate": {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "InstantiateMsg",
     "type": "object",
     "required": [
-      "fee_bps"
+      "fee_bps",
+      "fee_manager"
     ],
     "properties": {
       "fee_bps": {
@@ -15,6 +16,10 @@
         "type": "integer",
         "format": "uint64",
         "minimum": 0.0
+      },
+      "fee_manager": {
+        "description": "The address to send fees to if the funds are not in STARS",
+        "type": "string"
       }
     },
     "additionalProperties": false
@@ -53,19 +58,6 @@
       {
         "type": "object",
         "required": [
-          "contract_version"
-        ],
-        "properties": {
-          "contract_version": {
-            "type": "object",
-            "additionalProperties": false
-          }
-        },
-        "additionalProperties": false
-      },
-      {
-        "type": "object",
-        "required": [
           "config"
         ],
         "properties": {
@@ -79,16 +71,59 @@
     ]
   },
   "migrate": null,
-  "sudo": null,
+  "sudo": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "SudoMsg",
+    "oneOf": [
+      {
+        "type": "object",
+        "required": [
+          "update_config"
+        ],
+        "properties": {
+          "update_config": {
+            "type": "object",
+            "properties": {
+              "fee_bps": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "format": "uint64",
+                "minimum": 0.0
+              },
+              "fee_manager": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    ]
+  },
   "responses": {
     "config": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Config",
       "type": "object",
       "required": [
+        "fee_manager",
         "fee_percent"
       ],
       "properties": {
+        "fee_manager": {
+          "description": "The address to send fees to if the funds are not in STARS",
+          "allOf": [
+            {
+              "$ref": "#/definitions/Addr"
+            }
+          ]
+        },
         "fee_percent": {
           "description": "The percentage of funds to be burned",
           "allOf": [
@@ -100,31 +135,15 @@
       },
       "additionalProperties": false,
       "definitions": {
+        "Addr": {
+          "description": "A human readable address.\n\nIn Cosmos, this is typically bech32 encoded. But for multi-chain smart contracts no assumptions should be made other than being UTF-8 encoded and of reasonable length.\n\nThis type represents a validated address. It can be created in the following ways 1. Use `Addr::unchecked(input)` 2. Use `let checked: Addr = deps.api.addr_validate(input)?` 3. Use `let checked: Addr = deps.api.addr_humanize(canonical_addr)?` 4. Deserialize from JSON. This must only be done from JSON that was validated before such as a contract's state. `Addr` must not be used in messages sent by the user because this would result in unvalidated instances.\n\nThis type is immutable. If you really need to mutate it (Really? Are you sure?), create a mutable copy using `let mut mutable = Addr::to_string()` and operate on that `String` instance.",
+          "type": "string"
+        },
         "Decimal": {
           "description": "A fixed-point decimal value with 18 fractional digits, i.e. Decimal(1_000_000_000_000_000_000) == 1.0\n\nThe greatest possible value that can be represented is 340282366920938463463.374607431768211455 (which is (2^128 - 1) / 10^18)",
           "type": "string"
         }
       }
-    },
-    "contract_version": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "ContractVersion",
-      "type": "object",
-      "required": [
-        "contract",
-        "version"
-      ],
-      "properties": {
-        "contract": {
-          "description": "contract is the crate name of the implementing contract, eg. `crate:cw20-base` we will use other prefixes for other languages, and their standard global namespacing",
-          "type": "string"
-        },
-        "version": {
-          "description": "version is any string that this implementation knows. It may be simple counter \"1\", \"2\". or semantic version on release tags \"v0.7.0\", or some custom feature flag list. the only code that needs to understand the version parsing is code that knows how to migrate from the given contract (and is tied to it's implementation somehow)",
-          "type": "string"
-        }
-      },
-      "additionalProperties": false
     }
   }
 }

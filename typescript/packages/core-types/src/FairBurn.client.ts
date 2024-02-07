@@ -6,10 +6,9 @@
 
 import { CosmWasmClient, SigningCosmWasmClient, ExecuteResult } from "@cosmjs/cosmwasm-stargate";
 import { Coin, StdFee } from "@cosmjs/amino";
-import { InstantiateMsg, ExecuteMsg, QueryMsg, Decimal, Config, ContractVersion } from "./FairBurn.types";
+import { InstantiateMsg, ExecuteMsg, QueryMsg, SudoMsg, Addr, Decimal, Config } from "./FairBurn.types";
 export interface FairBurnReadOnlyInterface {
   contractAddress: string;
-  contractVersion: () => Promise<ContractVersion>;
   config: () => Promise<Config>;
 }
 export class FairBurnQueryClient implements FairBurnReadOnlyInterface {
@@ -19,15 +18,9 @@ export class FairBurnQueryClient implements FairBurnReadOnlyInterface {
   constructor(client: CosmWasmClient, contractAddress: string) {
     this.client = client;
     this.contractAddress = contractAddress;
-    this.contractVersion = this.contractVersion.bind(this);
     this.config = this.config.bind(this);
   }
 
-  contractVersion = async (): Promise<ContractVersion> => {
-    return this.client.queryContractSmart(this.contractAddress, {
-      contract_version: {}
-    });
-  };
   config = async (): Promise<Config> => {
     return this.client.queryContractSmart(this.contractAddress, {
       config: {}

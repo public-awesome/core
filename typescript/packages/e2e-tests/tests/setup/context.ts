@@ -111,10 +111,12 @@ export default class Context {
 
   instantiateContracts = async () => {
     let { client, address: sender } = this.testUserMap['user1']
+    let { address: feeManager } = this.testUserMap['user5']
 
     // Instantiate stargaze_fair_burn
     let instantiateFairBurnResult = await this.instantiateContract(client, sender, CONTRACT_MAP.FAIR_BURN, {
       fee_bps: 5000,
+      fee_manager: feeManager,
     })
 
     // Instantiate stargaze_royalty_registry
