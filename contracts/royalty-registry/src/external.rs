@@ -4,9 +4,10 @@ use crate::{
     ContractError,
 };
 
-use cosmwasm_std::{ensure, to_binary, Addr, Deps, MessageInfo, QuerierWrapper, WasmMsg};
+use cosmwasm_std::{
+    ensure, to_json_binary, Addr, Deps, MessageInfo, QuerierWrapper, Response, WasmMsg,
+};
 use sg721_base::msg::{CollectionInfoResponse, QueryMsg as Sg721QueryMsg};
-use sg_std::Response;
 
 /// Ensures that the sender is the collection creator.
 pub fn only_collection_creator(
@@ -110,7 +111,7 @@ pub fn fetch_or_set_royalties(
 
         response = response.add_message(WasmMsg::Execute {
             contract_addr: royalty_registry.to_string(),
-            msg: to_binary(&ExecuteMsg::InitializeCollectionRoyalty {
+            msg: to_json_binary(&ExecuteMsg::InitializeCollectionRoyalty {
                 collection: collection.to_string(),
             })
             .unwrap(),

@@ -8,10 +8,9 @@ use crate::{
     },
 };
 
-use cosmwasm_std::{attr, ensure, Addr, Decimal, DepsMut, Env, Event, MessageInfo};
+use cosmwasm_std::{attr, ensure, Addr, Decimal, DepsMut, Env, Event, MessageInfo, Response};
 use cw_utils::{maybe_addr, nonpayable};
 use sg721_base::msg::{CollectionInfoResponse, QueryMsg as Sg721QueryMsg};
-use sg_std::Response;
 
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;

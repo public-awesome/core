@@ -1,5 +1,7 @@
-use cosmwasm_std::{coin, to_binary, Addr, Coin, Decimal, Uint128, WasmMsg};
-use sg_std::Response;
+use anybuf::Anybuf;
+use cosmwasm_std::{
+    coin, to_json_binary, Addr, Coin, CosmosMsg, Decimal, Response, Uint128, WasmMsg,
+};
 
 use crate::{msg::ExecuteMsg, state::Config};
 
@@ -38,7 +40,7 @@ pub fn append_fair_burn_msg(
 ) -> Response {
     response.add_message(WasmMsg::Execute {
         contract_addr: fair_burn_addr.to_string(),
-        msg: to_binary(&ExecuteMsg::FairBurn {
+        msg: to_json_binary(&ExecuteMsg::FairBurn {
             recipient: recipient.map(|r| r.to_string()),
         })
         .unwrap(),
@@ -48,6 +50,22 @@ pub fn append_fair_burn_msg(
 
 pub fn bps_to_decimal(bps: u64) -> Decimal {
     Decimal::percent(bps) / Uint128::from(100u64)
+}
+
+pub fn create_fund_fairburn_pool_msg(sender: String, amount: &Coin) -> CosmosMsg {
+    let coin = Anybuf::new()
+        .append_string(1, &amount.denom)
+        .append_string(2, amount.amount.to_string());
+
+    let buf = Anybuf::new()
+        .append_string(1, sender)
+        .append_message(2, &coin)
+        .into_vec();
+
+    CosmosMsg::Stargate {
+        type_url: "/publicawesome.stargaze.alloc.v1beta1.MsgFundFairburnPool".to_string(),
+        value: buf.into(),
+    }
 }
 
 #[cfg(test)]

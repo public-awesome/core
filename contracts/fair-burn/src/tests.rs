@@ -1,4 +1,5 @@
 use crate::{
+    constants::NATIVE_DENOM,
     execute::execute,
     instantiate::instantiate,
     msg::{ExecuteMsg, InstantiateMsg, QueryMsg, SudoMsg},
@@ -8,22 +9,21 @@ use crate::{
 };
 
 use cosmwasm_std::{
-    coin, coins, to_binary, Addr, Coin, Decimal, Event, StdResult, Uint128, WasmMsg,
+    coin, coins, to_json_binary, Addr, Coin, Decimal, Empty, Event, StdResult, Uint128, WasmMsg,
 };
 use cw_multi_test::{
     AppResponse, BankSudo, Contract, ContractWrapper, Executor, SudoMsg as CwSudoMsg, WasmSudo,
 };
-use sg_multi_test::StargazeApp;
-use sg_std::{StargazeMsgWrapper, NATIVE_DENOM};
+use test_suite::common_setup::contract_boxes::{custom_mock_app, App};
 
 const INITIAL_BALANCE: u128 = 5_000_000_000;
 
-fn contract() -> Box<dyn Contract<StargazeMsgWrapper>> {
+fn contract() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(execute, instantiate, query).with_sudo(sudo);
     Box::new(contract)
 }
 
-fn fund_account(app: &mut StargazeApp, addr: &Addr, balances: Vec<Coin>) -> StdResult<()> {
+fn fund_account(app: &mut App, addr: &Addr, balances: Vec<Coin>) -> StdResult<()> {
     app.sudo(CwSudoMsg::Bank({
         BankSudo::Mint {
             to_address: addr.to_string(),
@@ -49,7 +49,7 @@ fn find_attribute(event: &Event, key: &str) -> Option<String> {
 
 #[test]
 fn try_instantiate() {
-    let mut app = StargazeApp::default();
+    let mut app = custom_mock_app();
     let fair_burn_id = app.store_code(contract());
 
     let creator = Addr::unchecked("creator");
@@ -62,7 +62,7 @@ fn try_instantiate() {
     let msg = WasmMsg::Instantiate {
         admin: None,
         code_id: fair_burn_id,
-        msg: to_binary(&init_msg).unwrap(),
+        msg: to_json_binary(&init_msg).unwrap(),
         funds: vec![],
         label: "FairBurn".to_string(),
     };
@@ -74,7 +74,7 @@ fn try_instantiate() {
 
 #[test]
 fn try_sudo_update() {
-    let mut app = StargazeApp::default();
+    let mut app = custom_mock_app();
     let fair_burn_id = app.store_code(contract());
 
     let creator = Addr::unchecked("creator");
@@ -107,7 +107,7 @@ fn try_sudo_update() {
     };
     let response = app.sudo(CwSudoMsg::Wasm(WasmSudo {
         contract_addr: fair_burn.clone(),
-        msg: to_binary(&sudo_msg).unwrap(),
+        msg: to_json_binary(&sudo_msg).unwrap(),
     }));
     assert!(response.is_ok());
 
@@ -126,7 +126,7 @@ fn try_sudo_update() {
 
 #[test]
 fn try_execute_fair_burn() {
-    let mut app = StargazeApp::default();
+    let mut app = custom_mock_app();
     let fair_burn_id = app.store_code(contract());
 
     let creator = Addr::unchecked("creator");
