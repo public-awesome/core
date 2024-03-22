@@ -1,10 +1,12 @@
+use crate::{fetch_or_set_royalties, ContractError};
+
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{to_binary, Addr, Binary, Deps, DepsMut, Empty, Env, MessageInfo, StdResult};
+use cosmwasm_std::{
+    to_json_binary, Addr, Binary, Deps, DepsMut, Empty, Env, MessageInfo, Response, StdResult,
+};
 use cw_multi_test::{Contract, ContractWrapper, Executor};
 use cw_utils::maybe_addr;
-use sg_multi_test::StargazeApp;
-use sg_std::{Response, StargazeMsgWrapper};
-use stargaze_royalty_registry::{fetch_or_set_royalties, ContractError};
+use test_suite::common_setup::contract_boxes::App;
 
 #[cw_serde]
 pub enum TestExecuteMsg {
@@ -51,15 +53,15 @@ pub fn instantiate(
 }
 
 pub fn query(_deps: Deps, _env: Env, _msg: Empty) -> StdResult<Binary> {
-    to_binary(&_msg)
+    to_json_binary(&_msg)
 }
 
-pub fn contract_dummy() -> Box<dyn Contract<StargazeMsgWrapper>> {
+pub fn contract_dummy() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(execute, instantiate, query);
     Box::new(contract)
 }
 
-pub fn setup_dummy_contract(router: &mut StargazeApp, creator: Addr) -> Addr {
+pub fn setup_dummy_contract(router: &mut App, creator: Addr) -> Addr {
     let dummy_contract_id = router.store_code(contract_dummy());
     router
         .instantiate_contract(

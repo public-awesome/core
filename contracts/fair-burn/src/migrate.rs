@@ -5,11 +5,10 @@ use crate::{
 };
 
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{ensure, Decimal, DepsMut, Env, Event, StdError};
+use cosmwasm_std::{ensure, Decimal, DepsMut, Env, Event, Response, StdError};
 use cw2::{get_contract_version, set_contract_version};
 use cw_storage_plus::Item;
 use semver::Version;
-use sg_std::Response;
 
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;

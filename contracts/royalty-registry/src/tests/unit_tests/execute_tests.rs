@@ -1,23 +1,26 @@
-use crate::helpers::utils::assert_error;
-use crate::setup::setup_accounts::setup_accounts;
-use crate::setup::setup_contracts::{contract_royalty_registry, setup_royalty_registry};
-use crate::setup::setup_minter::standard_minter_template;
+use crate::{
+    msg::{ExecuteMsg, InstantiateMsg, QueryMsg},
+    state::Config,
+    state::{RoyaltyDefault, RoyaltyEntry, RoyaltyProtocol},
+    tests::helpers::utils::assert_error,
+    tests::setup::{
+        setup_accounts::setup_accounts,
+        setup_contracts::{contract_royalty_registry, setup_royalty_registry},
+        setup_minter::standard_minter_template,
+    },
+    ContractError,
+};
 
 use cosmwasm_std::{Addr, Decimal};
 use cw_multi_test::Executor;
-use sg_multi_test::StargazeApp;
 use sg_std::GENESIS_MINT_START_TIME;
-use stargaze_royalty_registry::state::{RoyaltyDefault, RoyaltyEntry, RoyaltyProtocol};
-use stargaze_royalty_registry::ContractError;
-use stargaze_royalty_registry::{
-    msg::{ExecuteMsg, InstantiateMsg, QueryMsg},
-    state::Config,
+use test_suite::common_setup::{
+    contract_boxes::custom_mock_app, setup_accounts_and_block::setup_block_time,
 };
-use test_suite::common_setup::setup_accounts_and_block::setup_block_time;
 
 #[test]
 fn try_instantiate() {
-    let mut app = StargazeApp::default();
+    let mut app = custom_mock_app();
     let royalty_registry_id = app.store_code(contract_royalty_registry());
     let (_owner, _bidder, creator) = setup_accounts(&mut app).unwrap();
 

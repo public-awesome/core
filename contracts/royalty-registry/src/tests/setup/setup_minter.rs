@@ -1,4 +1,4 @@
-use crate::setup::setup_accounts::setup_accounts;
+use crate::tests::setup::setup_accounts::setup_accounts;
 
 use cosmwasm_std::{Addr, Timestamp};
 use sg2::tests::mock_collection_params_1;

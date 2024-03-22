@@ -6,7 +6,7 @@ use crate::{
     },
 };
 
-use cosmwasm_std::{to_binary, Addr, Binary, Deps, Env, StdResult};
+use cosmwasm_std::{to_json_binary, Addr, Binary, Deps, Env, StdResult};
 use cw_utils::maybe_addr;
 use sg_index_query::{QueryOptions, QueryOptionsInternal};
 
@@ -18,14 +18,14 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     let api = deps.api;
 
     match msg {
-        QueryMsg::Config {} => to_binary(&query_config(deps)?),
-        QueryMsg::CollectionRoyaltyDefault { collection } => to_binary(
+        QueryMsg::Config {} => to_json_binary(&query_config(deps)?),
+        QueryMsg::CollectionRoyaltyDefault { collection } => to_json_binary(
             &query_collection_royalty_default(deps, api.addr_validate(&collection)?)?,
         ),
         QueryMsg::CollectionRoyaltyProtocol {
             collection,
             protocol,
-        } => to_binary(&query_collection_royalty_protocol(
+        } => to_json_binary(&query_collection_royalty_protocol(
             deps,
             api.addr_validate(&collection)?,
             api.addr_validate(&protocol)?,
@@ -33,7 +33,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::RoyaltyProtocolByCollection {
             collection,
             query_options,
-        } => to_binary(&query_royalty_protocol_by_collection(
+        } => to_json_binary(&query_royalty_protocol_by_collection(
             deps,
             api.addr_validate(&collection)?,
             query_options.unwrap_or_default(),
@@ -41,7 +41,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::RoyaltyPayment {
             collection,
             protocol,
-        } => to_binary(&query_royalty_payment(
+        } => to_json_binary(&query_royalty_payment(
             deps,
             api.addr_validate(&collection)?,
             maybe_addr(api, protocol)?,
