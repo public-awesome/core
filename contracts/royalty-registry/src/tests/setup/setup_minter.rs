@@ -1,8 +1,7 @@
-use crate::tests::setup::setup_accounts::setup_accounts;
+use crate::tests::setup::setup_accounts::{setup_accounts, GENESIS_MINT_START_TIME};
 
 use cosmwasm_std::{Addr, Timestamp};
 use sg2::tests::mock_collection_params_1;
-use sg_std::GENESIS_MINT_START_TIME;
 use test_suite::common_setup::{
     contract_boxes::custom_mock_app,
     msg::{MinterCollectionResponse, MinterTemplateResponse},

@@ -1,19 +1,19 @@
 use crate::{
     msg::{ExecuteMsg, InstantiateMsg, QueryMsg},
-    state::Config,
-    state::{RoyaltyDefault, RoyaltyEntry, RoyaltyProtocol},
-    tests::helpers::utils::assert_error,
-    tests::setup::{
-        setup_accounts::setup_accounts,
-        setup_contracts::{contract_royalty_registry, setup_royalty_registry},
-        setup_minter::standard_minter_template,
+    state::{Config, RoyaltyDefault, RoyaltyEntry, RoyaltyProtocol},
+    tests::{
+        helpers::utils::assert_error,
+        setup::{
+            setup_accounts::{setup_accounts, GENESIS_MINT_START_TIME},
+            setup_contracts::{contract_royalty_registry, setup_royalty_registry},
+            setup_minter::standard_minter_template,
+        },
     },
     ContractError,
 };
 
 use cosmwasm_std::{Addr, Decimal};
 use cw_multi_test::Executor;
-use sg_std::GENESIS_MINT_START_TIME;
 use test_suite::common_setup::{
     contract_boxes::custom_mock_app, setup_accounts_and_block::setup_block_time,
 };

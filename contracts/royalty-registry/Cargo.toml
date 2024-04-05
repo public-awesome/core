@@ -47,7 +47,6 @@ thiserror       = "1.0.56"
 
 [dev-dependencies]
 cw-multi-test   = "0.20.0"
-sg-std          = "2.1.0"
 sg2             = { git = "https://github.com/public-awesome/launchpad.git", rev = "897d3ab057d381c1654c7246f3972ddd9f9238ce", package = "sg2" }
 test-suite      = { git = "https://github.com/public-awesome/launchpad.git", rev = "897d3ab057d381c1654c7246f3972ddd9f9238ce", package = "test-suite" }
 vending-factory = { git = "https://github.com/public-awesome/launchpad.git", rev = "897d3ab057d381c1654c7246f3972ddd9f9238ce", package = "vending-factory" }

@@ -1,8 +1,11 @@
 use cosmwasm_std::{coins, Addr, Coin, StdResult};
 use cw_multi_test::SudoMsg as CwSudoMsg;
 use cw_multi_test::{BankSudo, SudoMsg};
-use sg_std::NATIVE_DENOM;
 use test_suite::common_setup::contract_boxes::App;
+
+pub const NATIVE_DENOM: &str = "ustars";
+// 3/11/2022 16:00:00 ET
+pub const GENESIS_MINT_START_TIME: u64 = 1647032400000000000;
 
 // all amounts in ustars
 pub const INITIAL_BALANCE: u128 = 5_000_000_000;
