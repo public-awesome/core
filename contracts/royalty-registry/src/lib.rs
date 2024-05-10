@@ -22,6 +22,7 @@ pub mod msg;
 pub mod query;
 pub mod state;
 pub mod sudo;
+mod tests;
 
 pub use crate::error::ContractError;
 pub use crate::external::fetch_or_set_royalties;

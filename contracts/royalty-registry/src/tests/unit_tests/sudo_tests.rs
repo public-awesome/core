@@ -1,11 +1,12 @@
-use crate::setup::setup_contracts::setup_royalty_registry;
-use crate::setup::setup_minter::standard_minter_template;
-
-use cosmwasm_std::Decimal;
-use stargaze_royalty_registry::{
+use crate::{
     msg::{QueryMsg, SudoMsg},
     state::Config,
+    tests::setup::{
+        setup_contracts::setup_royalty_registry, setup_minter::standard_minter_template,
+    },
 };
+
+use cosmwasm_std::Decimal;
 
 #[test]
 fn try_sudo_update_config() {

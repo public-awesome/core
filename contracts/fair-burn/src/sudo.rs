@@ -1,8 +1,7 @@
 use crate::{error::ContractError, helpers::bps_to_decimal, msg::SudoMsg, state::CONFIG};
 
-use cosmwasm_std::{Addr, DepsMut, Env, Event};
+use cosmwasm_std::{Addr, DepsMut, Env, Event, Response};
 use cw_utils::maybe_addr;
-use sg_std::Response;
 
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;

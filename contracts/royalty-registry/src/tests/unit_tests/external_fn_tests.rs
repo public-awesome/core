@@ -1,11 +1,14 @@
-use crate::setup::setup_contracts::setup_royalty_registry;
-use crate::setup::setup_dummy_contract::{setup_dummy_contract, TestExecuteMsg};
-use crate::setup::setup_minter::standard_minter_template;
+use crate::{
+    msg::{QueryMsg, RoyaltyPaymentResponse},
+    tests::setup::{
+        setup_contracts::setup_royalty_registry,
+        setup_dummy_contract::{setup_dummy_contract, TestExecuteMsg},
+        setup_minter::standard_minter_template,
+    },
+};
 
 use cosmwasm_std::Addr;
 use cw_multi_test::Executor;
-use stargaze_royalty_registry::msg::QueryMsg;
-use stargaze_royalty_registry::msg::RoyaltyPaymentResponse;
 
 #[test]
 fn try_fetch_or_set_royalties() {

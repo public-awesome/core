@@ -6,9 +6,8 @@ use crate::{
     state::Config,
 };
 
-use cosmwasm_std::{DepsMut, Env, Event, MessageInfo};
+use cosmwasm_std::{DepsMut, Env, Event, MessageInfo, Response};
 use cw2::set_contract_version;
-use sg_std::Response;
 
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;

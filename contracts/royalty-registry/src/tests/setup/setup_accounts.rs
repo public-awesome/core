@@ -1,15 +1,18 @@
 use cosmwasm_std::{coins, Addr, Coin, StdResult};
 use cw_multi_test::SudoMsg as CwSudoMsg;
 use cw_multi_test::{BankSudo, SudoMsg};
-use sg_multi_test::StargazeApp;
-use sg_std::NATIVE_DENOM;
+use test_suite::common_setup::contract_boxes::App;
+
+pub const NATIVE_DENOM: &str = "ustars";
+// 3/11/2022 16:00:00 ET
+pub const GENESIS_MINT_START_TIME: u64 = 1647032400000000000;
 
 // all amounts in ustars
 pub const INITIAL_BALANCE: u128 = 5_000_000_000;
 pub const _MINT_PRICE: u128 = 100_000_000;
 
 // initializes accounts with balances
-pub fn setup_accounts(router: &mut StargazeApp) -> StdResult<(Addr, Addr, Addr)> {
+pub fn setup_accounts(router: &mut App) -> StdResult<(Addr, Addr, Addr)> {
     let owner: Addr = Addr::unchecked("owner");
     let bidder: Addr = Addr::unchecked("bidder");
     let creator: Addr = Addr::unchecked("creator");
@@ -55,7 +58,7 @@ pub fn setup_accounts(router: &mut StargazeApp) -> StdResult<(Addr, Addr, Addr)>
 }
 
 pub fn _setup_addtl_account(
-    router: &mut StargazeApp,
+    router: &mut App,
     input: &str,
     initial_balance: u128,
 ) -> StdResult<Addr> {
