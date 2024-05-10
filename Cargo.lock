@@ -1656,6 +1656,20 @@ dependencies = [
 
 [[package]]
 name = "sg721"
+version = "2.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b37ea61753635e1de01a16947784ddd5ba8e256fa403be6246b2d88578914fb2"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-utils 0.16.0",
+ "cw721-base 0.16.0",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
+name = "sg721"
 version = "3.5.0"
 source = "git+https://github.com/public-awesome/launchpad.git?rev=897d3ab057d381c1654c7246f3972ddd9f9238ce#897d3ab057d381c1654c7246f3972ddd9f9238ce"
 dependencies = [
@@ -1669,18 +1683,23 @@ dependencies = [
 ]
 
 [[package]]
-name = "sg721"
-version = "3.7.0"
+name = "sg721-base"
+version = "2.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4363a35fe3a83f1170b1ed7ccdf2f79b7be73992c0a144eb8eb4ccfab38551c5"
+checksum = "3b81900474a5a2a6cf25e70720d62a565abc56caa1fe3613cfd15157c63dfb89"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
- "cw-ownable",
- "cw-utils 1.0.3",
- "cw721-base 0.18.0",
+ "cw-storage-plus 0.16.0",
+ "cw-utils 0.16.0",
+ "cw2 0.16.0",
+ "cw721 0.16.0",
+ "cw721-base 0.16.0",
  "serde",
+ "sg-std 2.4.0",
+ "sg721 2.4.0",
  "thiserror",
+ "url",
 ]
 
 [[package]]
@@ -1699,27 +1718,6 @@ dependencies = [
  "serde",
  "sg-std 3.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "sg721 3.5.0",
- "thiserror",
- "url",
-]
-
-[[package]]
-name = "sg721-base"
-version = "3.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8ffedf506196cfb3b4840a98039d8ed880b9feeedb8ae208f70daa0fa27fc457"
-dependencies = [
- "cosmwasm-schema",
- "cosmwasm-std",
- "cw-ownable",
- "cw-storage-plus 1.2.0",
- "cw-utils 1.0.3",
- "cw2 1.1.2",
- "cw721 0.18.0",
- "cw721-base 0.18.0",
- "serde",
- "sg-std 3.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "sg721 3.7.0",
  "thiserror",
  "url",
 ]
@@ -1889,8 +1887,8 @@ dependencies = [
  "serde",
  "sg-index-query 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "sg2",
- "sg721 3.7.0",
- "sg721-base 3.7.0",
+ "sg721 2.4.0",
+ "sg721-base 2.4.0",
  "test-suite",
  "thiserror",
  "vending-factory",

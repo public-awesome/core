@@ -38,8 +38,8 @@ cw-storage-plus = "1.2.0"
 cw2             = "1.1.2"
 cw-utils        = "1.0.3"
 sg-index-query  = { version = "0.1.0" }
-sg721           = { version = "3.7.0", features = ["library"] }
-sg721-base      = { version = "3.7.0", features = ["library"] }
+sg721           = { version = "2.4.0", features = ["library"] }
+sg721-base      = { version = "2.4.0", features = ["library"] }
 schemars        = "0.8.11"
 serde           = "1.0.196"
 semver          = "1.0.21"
