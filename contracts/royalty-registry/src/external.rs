@@ -4,9 +4,8 @@ use crate::{
     ContractError,
 };
 
-use cosmwasm_std::{ensure, to_binary, Addr, Deps, MessageInfo, QuerierWrapper, WasmMsg};
+use cosmwasm_std::{ensure, to_binary, Addr, Deps, MessageInfo, QuerierWrapper, Response, WasmMsg};
 use sg721_base::msg::{CollectionInfoResponse, QueryMsg as Sg721QueryMsg};
-use sg_std::Response;
 
 /// Ensures that the sender is the collection creator.
 pub fn only_collection_creator(
