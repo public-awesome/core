@@ -10,7 +10,7 @@ use cw2::set_contract_version;
 use cw721::{AllNftInfoResponse, TokensResponse};
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, TierResponse};
 use crate::state::{
     increment_token_index, BASE_URI, COLLECTION, PAUSED, TIERS, TOKEN_INDEX, TOKEN_UPDATE_HEIGHT,
 };
@@ -299,6 +299,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
             to_binary(&TOKEN_UPDATE_HEIGHT.load(deps.storage, token_id)?)
         }
         QueryMsg::Tier { address } => {
+            let tiers = TIERS.load(deps.storage)?;
             let tokens_response: cw721::TokensResponse = deps.querier.query_wasm_smart(
                 COLLECTION.load(deps.storage)?,
                 &cw721::Cw721QueryMsg::Tokens {
@@ -307,6 +308,13 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
                     limit: None,
                 },
             )?;
+
+            if tokens_response.tokens.is_empty() {
+                return Ok(to_binary(&TierResponse {
+                    tier: None,
+                    last_update_time: None,
+                })?);
+            }
             let token_id = tokens_response
                 .tokens
                 .first()
@@ -319,14 +327,17 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
                 },
             )?;
             let staked_amount = token_info.extension.staked_amount;
+            let last_update_time = token_info.extension.updated_at;
 
-            let tiers = TIERS.load(deps.storage)?;
             let index = tiers
                 .iter()
                 .position(|&x| x >= staked_amount)
                 .unwrap_or(tiers.len());
 
-            Ok(to_binary(&index)?)
+            Ok(to_binary(&TierResponse {
+                tier: Some(index as u64),
+                last_update_time: Some(last_update_time),
+            })?)
         }
         QueryMsg::Tiers {} => {
             let tiers = TIERS.load(deps.storage)?;

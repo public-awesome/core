@@ -1,5 +1,5 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::Uint128;
+use cosmwasm_std::{Timestamp, Uint128};
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -37,6 +37,12 @@ pub enum SudoMsg {
 }
 
 #[cw_serde]
+pub struct TierResponse {
+    pub tier: Option<u64>,
+    pub last_update_time: Option<Timestamp>,
+}
+
+#[cw_serde]
 #[derive(QueryResponses)]
 pub enum QueryMsg {
     #[returns(String)]
@@ -45,7 +51,7 @@ pub enum QueryMsg {
     IsPaused {},
     #[returns(u64)]
     TokenUpdateHeight { token_id: u64 },
-    #[returns(u64)]
+    #[returns(TierResponse)]
     Tier { address: String },
     #[returns(Vec<Uint128>)]
     Tiers {},
