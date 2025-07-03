@@ -3,8 +3,8 @@ use std::env;
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    ensure, instantiate2_address, to_binary, Addr, Binary, CodeInfoResponse, Deps, DepsMut, Env,
-    Event, MessageInfo, Response, StdError, StdResult, Timestamp, Uint128, WasmMsg,
+    ensure, instantiate2_address, to_json_binary, Addr, Binary, CodeInfoResponse, Deps, DepsMut,
+    Env, Event, MessageInfo, Response, StdError, StdResult, Timestamp, Uint128, WasmMsg,
 };
 use cw2::set_contract_version;
 use cw721::{AllNftInfoResponse, TokensResponse};
@@ -51,7 +51,7 @@ pub fn instantiate(
         admin: Some(String::from(info.sender)),
         code_id: msg.collection_code_id,
         label: String::from("vip-collection"),
-        msg: to_binary(&cw721_base::InstantiateMsg {
+        msg: to_json_binary(&cw721_base::InstantiateMsg {
             name: "Stargaze VIP Collection".to_string(),
             symbol: "SGVIP".to_string(),
             minter: minter.to_string(),
@@ -76,7 +76,7 @@ pub fn execute(
 ) -> Result<Response, ContractError> {
     match msg {
         ExecuteMsg::Mint {} => execute_mint(deps, env, info),
-        ExecuteMsg::Update { token_id } => execute_update(deps, env, info, token_id),
+        ExecuteMsg::Update { address } => execute_update(deps, env, info, address),
         ExecuteMsg::Pause {} => execute_pause(deps, info),
         ExecuteMsg::Resume {} => execute_resume(deps, info),
         ExecuteMsg::UpdateTiers { tiers } => execute_update_tiers(deps, info, tiers),
@@ -94,7 +94,7 @@ pub fn execute_mint(
     let vip_collection = COLLECTION.load(deps.storage)?;
 
     let mint_msg = mint(deps.branch(), info.sender, env.block.time, vip_collection)?;
-    let token_id = TOKEN_INDEX.load(deps.storage)?;
+    let token_id = TOKEN_INDEX.load(deps.storage)?.to_string();
     TOKEN_UPDATE_HEIGHT.update(deps.storage, token_id, |_| -> StdResult<_> {
         Ok(env.block.height)
     })?;
@@ -106,17 +106,26 @@ pub fn execute_update(
     mut deps: DepsMut,
     env: Env,
     _info: MessageInfo,
-    token_id: u64,
+    address: String,
 ) -> Result<Response, ContractError> {
     ensure!(!PAUSED.load(deps.storage)?, ContractError::Paused {});
-    let vip_collection = COLLECTION.load(deps.storage)?;
+    deps.api.addr_validate(&address)?;
 
-    let last_update_height = TOKEN_UPDATE_HEIGHT.may_load(deps.storage, token_id)?;
+    let vip_collection = COLLECTION.load(deps.storage)?;
+    let token_id = fetch_token_id_for_address(deps.as_ref(), address.to_string())?
+        .ok_or(ContractError::TokenNotFound {})?;
+
+    let last_update_height = TOKEN_UPDATE_HEIGHT.may_load(deps.storage, token_id.clone())?;
     if last_update_height.is_none() {
         return Err(ContractError::TokenNotFound {});
     }
 
-    let mint_msg = update(deps.branch(), env.block.time, vip_collection, token_id)?;
+    let mint_msg = update(
+        deps.branch(),
+        env.block.time,
+        vip_collection,
+        token_id.clone(),
+    )?;
 
     TOKEN_UPDATE_HEIGHT.update(deps.storage, token_id, |_| -> StdResult<_> {
         Ok(env.block.height)
@@ -167,7 +176,7 @@ pub fn mint(
 
     Ok(WasmMsg::Execute {
         contract_addr: vip_collection.to_string(),
-        msg: to_binary(&msg)?,
+        msg: to_json_binary(&msg)?,
         funds: vec![],
     })
 }
@@ -176,12 +185,12 @@ pub fn update(
     mut deps: DepsMut,
     block_time: Timestamp,
     vip_collection: Addr,
-    token_id: u64,
+    token_id: String,
 ) -> Result<WasmMsg, ContractError> {
     let all_nft_info_response: AllNftInfoResponse<Metadata> = deps.querier.query_wasm_smart(
         vip_collection.clone(),
         &cw721_base::msg::QueryMsg::<AllNftInfoResponse<Metadata>>::AllNftInfo {
-            token_id: token_id.to_string(),
+            token_id: token_id.clone(),
             include_expired: None,
         },
     )?;
@@ -198,7 +207,7 @@ pub fn update(
     let token_uri = Some(format!("{}/{}", base_uri, index));
 
     let msg = stargaze_vip_collection::ExecuteMsg::Mint {
-        token_id: token_id.to_string(),
+        token_id,
         owner,
         token_uri,
         extension: stargaze_vip_collection::state::Metadata {
@@ -210,7 +219,7 @@ pub fn update(
 
     Ok(WasmMsg::Execute {
         contract_addr: vip_collection.to_string(),
-        msg: to_binary(&msg)?,
+        msg: to_json_binary(&msg)?,
         funds: vec![],
     })
 }
@@ -293,37 +302,26 @@ fn check_tier_order(tiers: &[Uint128]) -> StdResult<()> {
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::Collection {} => to_binary(&COLLECTION.load(deps.storage)?.to_string()),
-        QueryMsg::IsPaused {} => to_binary(&PAUSED.load(deps.storage)?),
+        QueryMsg::Collection {} => to_json_binary(&COLLECTION.load(deps.storage)?.to_string()),
+        QueryMsg::IsPaused {} => to_json_binary(&PAUSED.load(deps.storage)?),
         QueryMsg::TokenUpdateHeight { token_id } => {
-            to_binary(&TOKEN_UPDATE_HEIGHT.load(deps.storage, token_id)?)
+            to_json_binary(&TOKEN_UPDATE_HEIGHT.load(deps.storage, token_id)?)
         }
         QueryMsg::Tier { address } => {
             let tiers = TIERS.load(deps.storage)?;
-            let tokens_response: cw721::TokensResponse = deps.querier.query_wasm_smart(
-                COLLECTION.load(deps.storage)?,
-                &cw721::Cw721QueryMsg::Tokens {
-                    owner: address,
-                    start_after: None,
-                    limit: None,
-                },
-            )?;
+            let token_id = fetch_token_id_for_address(deps, address)?;
 
-            if tokens_response.tokens.is_empty() {
-                return Ok(to_binary(&TierResponse {
+            if token_id.is_none() {
+                return Ok(to_json_binary(&TierResponse {
                     tier: None,
                     last_update_time: None,
                 })?);
             }
-            let token_id = tokens_response
-                .tokens
-                .first()
-                .ok_or_else(|| StdError::generic_err("No token found for address"))?;
 
             let token_info: cw721::NftInfoResponse<Metadata> = deps.querier.query_wasm_smart(
                 COLLECTION.load(deps.storage)?,
                 &cw721::Cw721QueryMsg::NftInfo {
-                    token_id: token_id.to_string(),
+                    token_id: token_id.unwrap(),
                 },
             )?;
             let staked_amount = token_info.extension.staked_amount;
@@ -334,16 +332,34 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
                 .position(|&x| x >= staked_amount)
                 .unwrap_or(tiers.len());
 
-            Ok(to_binary(&TierResponse {
+            Ok(to_json_binary(&TierResponse {
                 tier: Some(index as u64),
                 last_update_time: Some(last_update_time),
             })?)
         }
         QueryMsg::Tiers {} => {
             let tiers = TIERS.load(deps.storage)?;
-            Ok(to_binary(&tiers)?)
+            Ok(to_json_binary(&tiers)?)
         }
     }
+}
+
+pub fn fetch_token_id_for_address(deps: Deps, address: String) -> StdResult<Option<String>> {
+    let tokens_response: cw721::TokensResponse = deps.querier.query_wasm_smart(
+        COLLECTION.load(deps.storage)?,
+        &cw721::Cw721QueryMsg::Tokens {
+            owner: address,
+            start_after: None,
+            limit: None,
+        },
+    )?;
+
+    if tokens_response.tokens.is_empty() {
+        return Ok(None);
+    }
+    let token_id = tokens_response.tokens.first().map(|id| id.to_string());
+
+    Ok(token_id)
 }
 
 #[cfg(test)]

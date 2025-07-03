@@ -7,7 +7,7 @@ pub const PAUSED: Item<bool> = Item::new("paused");
 pub const BASE_URI: Item<String> = Item::new("base_uri");
 
 /// (name, block_height)
-pub const TOKEN_UPDATE_HEIGHT: Map<u64, u64> = Map::new("tuh");
+pub const TOKEN_UPDATE_HEIGHT: Map<String, u64> = Map::new("tuh");
 
 pub const TOKEN_INDEX: Item<u64> = Item::new("token_index");
 

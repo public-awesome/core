@@ -14,7 +14,7 @@ pub enum ExecuteMsg {
     Mint {},
     /// Update the stake amount for the given name
     Update {
-        token_id: u64,
+        address: String,
     },
     /// So we can pause before migrating names, etc.
     Pause {},
@@ -50,7 +50,7 @@ pub enum QueryMsg {
     #[returns(bool)]
     IsPaused {},
     #[returns(u64)]
-    TokenUpdateHeight { token_id: u64 },
+    TokenUpdateHeight { token_id: String },
     #[returns(TierResponse)]
     Tier { address: String },
     #[returns(Vec<Uint128>)]
