@@ -4,7 +4,7 @@ use std::env;
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
     ensure, instantiate2_address, to_json_binary, Addr, Binary, CodeInfoResponse, Deps, DepsMut,
-    Env, Event, MessageInfo, Response, StdError, StdResult, Timestamp, Uint128, WasmMsg,
+    Empty, Env, Event, MessageInfo, Response, StdError, StdResult, Timestamp, Uint128, WasmMsg,
 };
 use cw2::set_contract_version;
 use cw721::{AllNftInfoResponse, TokensResponse};
@@ -159,7 +159,7 @@ pub fn mint(
     let index = tiers
         .iter()
         .position(|&x| x >= staked_amount)
-        .unwrap_or(tiers.len());
+        .unwrap_or(tiers.len().saturating_sub(1));
     let base_uri = BASE_URI.load(deps.storage)?;
     let token_uri = Some(format!("{}/{}", base_uri, index));
 
@@ -202,7 +202,8 @@ pub fn update(
     let index = tiers
         .iter()
         .position(|&x| x >= staked_amount)
-        .unwrap_or(tiers.len());
+        .unwrap_or(tiers.len().saturating_sub(1));
+
     let base_uri = BASE_URI.load(deps.storage)?;
     let token_uri = Some(format!("{}/{}", base_uri, index));
 
@@ -330,7 +331,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
             let index = tiers
                 .iter()
                 .position(|&x| x >= staked_amount)
-                .unwrap_or(tiers.len());
+                .unwrap_or(tiers.len().saturating_sub(1));
 
             Ok(to_json_binary(&TierResponse {
                 tier: Some(index as u64),
@@ -360,6 +361,12 @@ pub fn fetch_token_id_for_address(deps: Deps, address: String) -> StdResult<Opti
     let token_id = tokens_response.tokens.first().map(|id| id.to_string());
 
     Ok(token_id)
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn migrate(deps: DepsMut, _env: Env, _msg: Empty) -> Result<sg_std::Response, ContractError> {
+    set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+    Ok(Response::new())
 }
 
 #[cfg(test)]

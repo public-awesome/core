@@ -1,4 +1,7 @@
-use cosmwasm_std::{ensure, to_json_binary, Addr, BankMsg, Binary, Coin, Deps, DepsMut, Empty, Env, Event, MessageInfo, StdResult};
+use cosmwasm_std::{
+    ensure, to_json_binary, Addr, BankMsg, Binary, Coin, Deps, DepsMut, Empty, Env, Event,
+    MessageInfo, StdResult,
+};
 use cw2::{get_contract_version, set_contract_version};
 use cw_utils::{maybe_addr, NativeBalance};
 use sg_std::{create_fund_fairburn_pool_msg, Response, NATIVE_DENOM};
