@@ -27,6 +27,9 @@ pub enum ContractError {
     #[error("TokenNotFound")]
     TokenNotFound {},
 
+    #[error("InsufficientStakedAmount (required: {required}, actual: {actual})")]
+    InsufficientStakedAmount { required: u128, actual: u128 },
+
     #[error("AlreadyMinted")]
     AlreadyMinted {},
     // Add any other custom errors you like here.

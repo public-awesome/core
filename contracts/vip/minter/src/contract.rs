@@ -19,6 +19,8 @@ use stargaze_vip_collection::state::Metadata;
 const CONTRACT_NAME: &str = "crates.io:stargaze-vip-minter";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
+const MIN_STAKED_AMOUNT: u128 = 5000000000; // Minimum staked amount to be eligible for minting
+
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
     deps: DepsMut,
@@ -155,6 +157,13 @@ pub fn mint(
 
     let owner_addr = deps.api.addr_validate(sender.as_ref())?;
     let staked_amount = total_staked(deps.branch(), owner_addr)?;
+    ensure!(
+        staked_amount >= Uint128::from(MIN_STAKED_AMOUNT),
+        ContractError::InsufficientStakedAmount {
+            required: MIN_STAKED_AMOUNT,
+            actual: u128::from(staked_amount)
+        }
+    );
     let tiers = TIERS.load(deps.storage)?;
     let index = tiers
         .iter()
