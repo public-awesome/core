@@ -12,5 +12,5 @@ coverage:
       default:
         enabled: no
 ignore:
-  - "contracts/loyalty/.*"
+  - "contracts/vip/.*"
   - "test/.*"

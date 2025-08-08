@@ -1,0 +1,9 @@
+{
+  "denom": "ustars",
+  "prefix": "stars",
+  "chain_id": "testing",
+  "grpc_endpoint": "https://rpc.elgafar-1.stargaze-apis.com:443",
+  "gas_prices": 0.8,
+  "gas_adjustment": 1.8,
+  "artifacts_path": "../../../artifacts"
+}

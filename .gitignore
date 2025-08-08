@@ -14,7 +14,13 @@
 
 # macOS
 .DS_Store
+tmp.txt
 
 # IDEs
 *.iml
 .idea
+
+# typescript
+node_modules/
+tmp/
+lib/

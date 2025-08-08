@@ -1,6 +1,6 @@
 use cosmwasm_std::{
-    ensure, to_binary, Addr, BankMsg, Binary, Coin, Deps, DepsMut, Empty, Env, Event, MessageInfo,
-    StdResult,
+    ensure, to_json_binary, Addr, BankMsg, Binary, Coin, Deps, DepsMut, Empty, Env, Event,
+    MessageInfo, StdResult,
 };
 use cw2::{get_contract_version, set_contract_version};
 use cw_utils::{maybe_addr, NativeBalance};
@@ -153,8 +153,8 @@ pub fn execute_fair_burn(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::ContractVersion {} => to_binary(&get_contract_version(deps.storage)?),
-        QueryMsg::Config {} => to_binary(&CONFIG.load(deps.storage)?),
+        QueryMsg::ContractVersion {} => to_json_binary(&get_contract_version(deps.storage)?),
+        QueryMsg::Config {} => to_json_binary(&CONFIG.load(deps.storage)?),
     }
 }
 

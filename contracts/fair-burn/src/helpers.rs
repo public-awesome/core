@@ -1,4 +1,4 @@
-use cosmwasm_std::{coin, to_binary, Addr, Coin, Decimal, Uint128, WasmMsg};
+use cosmwasm_std::{coin, to_json_binary, Addr, Coin, Decimal, Uint128, WasmMsg};
 use sg_std::Response;
 
 use crate::{msg::ExecuteMsg, state::Config};
@@ -38,7 +38,7 @@ pub fn append_fair_burn_msg(
 ) -> Response {
     response.add_message(WasmMsg::Execute {
         contract_addr: fair_burn_addr.to_string(),
-        msg: to_binary(&ExecuteMsg::FairBurn {
+        msg: to_json_binary(&ExecuteMsg::FairBurn {
             recipient: recipient.map(|r| r.to_string()),
         })
         .unwrap(),
