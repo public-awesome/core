@@ -168,7 +168,7 @@ pub fn mint(
     let index = tiers
         .iter()
         .position(|&x| x > staked_amount)
-        .unwrap_or(tiers.len().saturating_sub(1));
+        .unwrap_or(tiers.len());
     let base_uri = BASE_URI.load(deps.storage)?;
     let token_uri = Some(format!("{}/{}", base_uri, index));
 
@@ -211,7 +211,7 @@ pub fn update(
     let index = tiers
         .iter()
         .position(|&x| x > staked_amount)
-        .unwrap_or(tiers.len().saturating_sub(1));
+        .unwrap_or(tiers.len());
 
     let base_uri = BASE_URI.load(deps.storage)?;
     let token_uri = Some(format!("{}/{}", base_uri, index));
@@ -340,7 +340,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
             let index = tiers
                 .iter()
                 .position(|&x| x > staked_amount)
-                .unwrap_or(tiers.len().saturating_sub(1));
+                .unwrap_or(tiers.len());
 
             Ok(to_json_binary(&TierResponse {
                 tier: Some(index as u64),
